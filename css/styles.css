@@ -282,6 +282,7 @@ html { scrollbar-color: var(--acero) var(--agua); }
 .ice__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(2rem, 6vw, 6rem); align-items: start; }
 .ice__copy h2 { font-size: var(--fs-5); }
 .ice__copy > p { margin-top: 1.2rem; margin-bottom: 2rem; color: var(--texto-2); max-width: 38rem; }
+.ice__order { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
 .ice__copy > .ice__price { margin: .9rem 0 0; font-weight: 600; color: var(--botella); font-variant-numeric: tabular-nums; }
 .uses { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2.5rem; }
 .uses div { padding-top: 1rem; border-top: 1.5px solid var(--acero); }

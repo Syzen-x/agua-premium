@@ -381,9 +381,16 @@
   $('[data-spec-add]').addEventListener('click', () => add(current, specStep.get()));
   $$('[data-add]').forEach(b => b.addEventListener('click', () => add(b.dataset.add, 1)));
   $('[data-spec-extra]').addEventListener('click', () => add(ENVASE.id, specStep.get()));
-  // sección Ice Fresh: precio y mínimo junto al botón
-  const icePrice = priceOf('hielo-2kg'), iceEl = $('[data-ice-price]');
-  if (iceEl && icePrice !== null) { iceEl.textContent = `${money(icePrice)} ${byId['hielo-2kg'].unit}.`; iceEl.hidden = false; }
+  // sección Ice Fresh: se elige cuántas fundas (desde el mínimo) y el botón dice cuántas agrega y cuánto suman
+  const ICE = 'hielo-2kg', icePrice = priceOf(ICE), iceEl = $('[data-ice-price]'), iceBtn = $('[data-ice-add]');
+  const iceStep = stepper($('[data-ice-stepper]'), minOf(ICE), (n) => {
+    iceBtn.textContent = `Agregar ${n} fundas al pedido`;
+    if (icePrice === null) return;
+    iceEl.textContent = `${n} fundas: ${money(n * icePrice)}. Mínimo ${minOf(ICE)} fundas, a ${money(icePrice)} cada una.`;
+    iceEl.hidden = false;
+  });
+  iceStep.reset(minOf(ICE));
+  iceBtn.addEventListener('click', () => add(ICE, iceStep.get()));
 
   /* ── barra y panel del pedido ── */
   const countEl = $('[data-count]');
