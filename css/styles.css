@@ -143,6 +143,8 @@ html { scrollbar-color: var(--acero) var(--agua); }
 .hero__copy { pointer-events: auto; max-width: 46rem; }
 .hero__title { font-weight: 300; font-size: clamp(2.3rem, 0.6rem + 4.4vw, 5.5rem); line-height: .98; letter-spacing: -0.035em; }
 .hero__lede b { font-weight: 600; color: var(--botella); }
+.hero__title .hero__slogan { margin-top: .9rem; font-size: clamp(1.25rem, 0.8rem + 1.5vw, 2.1rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.15; color: var(--tapa-ink); }
+.hero__title .hero__slogan > span { white-space: normal; }
 .hero__title .line { display: block; overflow: hidden; padding-bottom: .06em; margin-bottom: -.06em; }
 .hero__title .line > span { display: inline-block; white-space: nowrap; }
 .hero__lede { margin-top: 1.5rem; max-width: 34rem; font-size: var(--fs-3); line-height: 1.45; color: var(--texto-2); }
