@@ -9,16 +9,18 @@
   /* ══════════════════════════════════════════════════════════════
      DATOS DEL NEGOCIO — se completan aquí, en un solo lugar.
      Lo que quede vacío ('' o null) NO se muestra en la página.
-     PENDIENTE: todos estos datos los entrega el dueño.
+     PENDIENTE: lo que sigue vacío lo entrega el dueño.
      ══════════════════════════════════════════════════════════════ */
   const NEGOCIO = {
-    // Precio por unidad en dólares, como número con punto decimal. null = sin precio visible.
+    // Lista oficial de precios (precio final), en dólares, como número con punto decimal.
+    // null = sin precio visible.
     precios: {
-      'agua-625': null,
-      'agua-1l': null,
-      'agua-galon': null,
-      'agua-20l': null,
-      'hielo-2kg': null
+      'agua-625': 3.5,     // paca x 15
+      'agua-1l': 3.5,      // paca x 9
+      'agua-galon': 3.5,   // 3,8 litros
+      'agua-20l': 1.5,     // bidón 20 litros, solo el líquido
+      'envase-20l': 7.5,   // envase plástico del bidón (bidón completo = envase + líquido)
+      'hielo-2kg': null    // PENDIENTE: el hielo no está en la lista oficial de precios
     },
     horario: '',            // horario de atención y de reparto, en una frase
     pedidoMinimo: '',       // pedido mínimo, en una frase
@@ -52,7 +54,7 @@
   const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   const RUTAS = [
     /* domingo   */ [],
-    /* lunes     */ ['coca'],
+    /* lunes     */ ['coca', 'loreto'],
     /* martes    */ ['lago'],
     /* miércoles */ ['shushufindi'],
     /* jueves    */ ['sacha'],
@@ -94,35 +96,44 @@
     {
       id: 'agua-625', short: '625 ml', name: 'Agua Premium 625 ml', h: 215,
       desc: 'En botella ECOFLEX: más resistente, más ligera y 100% reciclable. Agua purificada y envasada sin gas.',
-      facts: ['Botella ECOFLEX', '100% reciclable', 'Sin gas'],
+      facts: ['Paca de 15 botellas', 'Botella ECOFLEX', '100% reciclable', 'Sin gas'],
+      pack: 'paca x 15', unit: 'la paca de 15 botellas',
       sizes: [80, 160], iw: 540, ih: 1980
     },
     {
       id: 'agua-1l', short: '1 litro', name: 'Agua Premium 1 litro', h: 285,
       desc: 'Agua purificada y envasada sin gas, para la mesa, el trabajo o la jornada completa.',
-      facts: ['1 litro', 'Sin gas'],
+      facts: ['Paca de 9 botellas', 'Sin gas'],
+      pack: 'paca x 9', unit: 'la paca de 9 botellas',
       sizes: [120, 320], iw: 534, ih: 1772
     },
     {
       id: 'agua-galon', short: 'Galón', name: 'Agua Premium galón', h: 300,
       desc: 'Agua purificada en galón, para la cocina y el consumo diario de la casa.',
-      facts: ['Galón', 'Para la casa'],
+      facts: ['3,8 litros', 'Para la casa'],
+      pack: '3,8 litros', unit: 'el galón de 3,8 litros',
       sizes: [200, 400], iw: 704, ih: 1422
     },
     {
       id: 'agua-20l', short: 'Garrafón 20 L', name: 'Garrafón Agua Premium 20 L', h: 490,
       desc: 'Para el dispensador de la casa, la oficina o el negocio.',
       facts: ['20 litros', 'Para dispensador'],
+      pack: 'solo líquido', unit: 'el líquido, entregando tu envase',
       sizes: [280, 560], iw: 874, ih: 1522
     },
     {
       id: 'hielo-2kg', short: 'Hielo 2 kg', name: 'Ice Fresh Premium 2 kg', h: 330,
       desc: 'Hielo 100% purificado en cubitos cristalinos. Funda de 2 kg con agarradera.',
       facts: ['Hielo 100% purificado', 'Funda con agarradera', 'Cubitos cristalinos'],
+      unit: 'la funda',
       sizes: [220, 500], iw: 1010, ih: 1498
     }
   ];
-  const byId = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
+  // se pide aparte, no es una presentación: el envase del garrafón para quien no tiene uno
+  const ENVASE = { id: 'envase-20l', short: 'Envase 20 L', name: 'Envase plástico para garrafón 20 L' };
+  const byId = Object.fromEntries([...PRODUCTS, ENVASE].map(p => [p.id, p]));
+  // nombre con la unidad de venta, para el pedido y el mensaje
+  const label = (id) => byId[id].name + (byId[id].pack ? ` (${byId[id].pack})` : '');
   const HERO_ID = 'agua-625';
   const HERO_SIZES = [200, 300, 400];
   // variantes de una imagen: 1x y 2x del tamaño mostrado
@@ -137,14 +148,13 @@
   }
 
   /* ── precios ── */
-  const money = (n) => '$' + n.toFixed(2);
+  const money = (n) => '$' + n.toFixed(2).replace('.', ',');
   const priceOf = (id) => { const v = NEGOCIO.precios[id]; return typeof v === 'number' && v > 0 ? v : null; };
-  // total solo si todos los productos del pedido tienen precio
-  function totalOf(items) {
-    if (!items.length) return null;
-    let t = 0;
-    for (const [id, q] of items) { const p = priceOf(id); if (p === null) return null; t += p * q; }
-    return t;
+  // suma lo que tiene precio; si a algo le falta precio, se dice como subtotal
+  function totals(items) {
+    let sum = 0; const missing = [];
+    items.forEach(([id, q]) => { const p = priceOf(id); if (p === null) missing.push(byId[id].short); else sum += p * q; });
+    return { sum, any: sum > 0, label: missing.length ? `Subtotal sin ${lista(missing)}` : 'Total' };
   }
 
   /* ── analítica: cada salida a WhatsApp, con la sección de origen ── */
@@ -195,10 +205,10 @@
     const items = (extra || Object.entries(order)).filter(([id]) => byId[id]);
     items.forEach(([id, q]) => {
       const p = priceOf(id);
-      lines.push(`• ${q} × ${byId[id].name}${p !== null ? ` (${money(p * q)})` : ''}`);
+      lines.push(`• ${q} × ${label(id)}${p !== null ? `: ${money(p * q)}` : ''}`);
     });
-    const total = totalOf(items);
-    if (total !== null) lines.push(`Total: ${money(total)}`);
+    const t = totals(items);
+    if (t.any) lines.push(`${t.label}: ${money(t.sum)}`);
     if (cityKey && ZONAS[cityKey]) {
       const ruta = rutaTexto(cityKey);
       lines.push('', `Ciudad: ${ZONAS[cityKey].city}${ruta ? `, ${ruta}` : ''}`);
@@ -289,7 +299,18 @@
       }
     });
   }
-  chipsRoot.addEventListener('change', (e) => { if (e.target.name === 'quick-product') heroShow(e.target.value); });
+  const quickPrice = $('[data-quick-price]');
+  function showQuickPrice(id) {
+    const p = priceOf(id);
+    quickPrice.textContent = p !== null ? `${money(p)} ${byId[id].unit}` : '';
+    quickPrice.hidden = p === null;
+  }
+  showQuickPrice(HERO_ID);
+  chipsRoot.addEventListener('change', (e) => {
+    if (e.target.name !== 'quick-product') return;
+    heroShow(e.target.value);
+    showQuickPrice(e.target.value);
+  });
 
   /* ── la línea de productos ── */
   const lineup = $('[data-lineup]');
@@ -311,11 +332,16 @@
     $('[data-spec-name]').textContent = p.name;
     $('[data-spec-desc]').textContent = p.desc;
     const price = priceOf(id), priceEl = $('[data-spec-price]');
-    priceEl.textContent = price !== null ? `${money(price)} por unidad` : '';
+    priceEl.textContent = price !== null ? `${money(price)} ${p.unit}` : '';
     priceEl.hidden = price === null;
-    const note = id === 'agua-625' ? NEGOCIO.ecoflex.trim() : '', noteEl = $('[data-spec-note]');
+    const envase = priceOf(ENVASE.id);
+    const withEnvase = id === 'agua-20l' && price !== null && envase !== null;
+    const note = id === 'agua-625' ? NEGOCIO.ecoflex.trim()
+      : withEnvase ? `¿No tienes envase? El envase cuesta ${money(envase)}; el garrafón completo, envase y líquido, ${money(price + envase)}.` : '';
+    const noteEl = $('[data-spec-note]');
     noteEl.textContent = note;
     noteEl.hidden = !note;
+    $('[data-spec-extra]').hidden = !withEnvase;
     $('[data-spec-facts]').innerHTML = p.facts.map(f => `<li>${f}</li>`).join('');
     $('[data-spec-add]').textContent = `Agregar ${p.short} al pedido`;
     specStep.set(1);
@@ -333,6 +359,7 @@
   select(current);
   $('[data-spec-add]').addEventListener('click', () => add(current, specStep.get()));
   $$('[data-add]').forEach(b => b.addEventListener('click', () => add(b.dataset.add, 1)));
+  $('[data-spec-extra]').addEventListener('click', () => add(ENVASE.id, specStep.get()));
 
   /* ── barra y panel del pedido ── */
   const countEl = $('[data-count]');
@@ -342,14 +369,14 @@
   function renderOrder(bump) {
     const n = count();
     const entries = Object.entries(order).filter(([id]) => byId[id]);
-    const total = totalOf(entries);
+    const t = totals(entries);
     countEl.hidden = n === 0;
     countEl.textContent = n;
     if (bump && n) { countEl.classList.remove('is-bump'); void countEl.offsetWidth; countEl.classList.add('is-bump'); }
     bar.hidden = n === 0;
     const kinds = entries.length;
     $('[data-orderbar-text]').textContent = n
-      ? `${n} ${n === 1 ? 'producto' : 'productos'} en tu pedido${total !== null ? `: ${money(total)}` : kinds > 1 ? ` (${kinds} tipos)` : ''}`
+      ? `${n} ${n === 1 ? 'producto' : 'productos'} en tu pedido${t.any && t.label === 'Total' ? `: ${money(t.sum)}` : kinds > 1 ? ` (${kinds} tipos)` : ''}`
       : 'Tu pedido';
     $('[data-orderbar-send]').href = waURL(orderText('', ''));
     drawer.classList.toggle('is-empty', n === 0);
@@ -357,21 +384,27 @@
     list.innerHTML = entries.map(([id, q]) => {
       const p = priceOf(id);
       return `
-      <li data-line="${id}"><span>${byId[id].name}${p !== null ? `<small>${money(p)} c/u, ${money(p * q)}</small>` : ''}</span>
+      <li data-line="${id}"><span>${label(id)}${p !== null ? `<small>${q} × ${money(p)} = ${money(p * q)}</small>` : ''}</span>
         <div class="stepper"><button type="button" data-d="-1" aria-label="Quitar uno de ${byId[id].name}"><svg aria-hidden="true"><use href="#i-minus"/></svg></button>
         <output aria-live="polite">${q}</output>
         <button type="button" data-d="1" aria-label="Agregar uno de ${byId[id].name}"><svg aria-hidden="true"><use href="#i-plus"/></svg></button></div>
       </li>`;
     }).join('');
     const totalEl = $('[data-drawer-total]');
-    totalEl.hidden = total === null;
-    $('[data-v]', totalEl).textContent = total !== null ? money(total) : '';
+    totalEl.hidden = !t.any;
+    $('[data-l]', totalEl).textContent = t.label;
+    $('[data-v]', totalEl).textContent = t.any ? money(t.sum) : '';
+    // quien pide garrafón y no lleva envase puede sumarlo aquí
+    const envaseBtn = $('[data-add-envase]'), envasePrice = priceOf(ENVASE.id);
+    envaseBtn.hidden = !(order['agua-20l'] && !order[ENVASE.id] && envasePrice !== null);
+    if (envasePrice !== null) envaseBtn.textContent = `¿No tienes envase? Agregar envase (${money(envasePrice)})`;
   }
   list.addEventListener('click', (e) => {
     const b = e.target.closest('[data-d]'); if (!b) return;
     const id = b.closest('[data-line]').dataset.line;
     setQty(id, (order[id] || 0) + Number(b.dataset.d));
   });
+  $('[data-add-envase]').addEventListener('click', () => add(ENVASE.id, order['agua-20l'] || 1));
   let lastFocus = null;
   function openDrawer() {
     lastFocus = document.activeElement;

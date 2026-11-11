@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Unbounded:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="assets/img/productos/agua-625-hero-200.webp" imagesrcset="assets/img/productos/agua-625-hero-200.webp 200w, assets/img/productos/agua-625-hero-300.webp 300w, assets/img/productos/agua-625-hero-400.webp 400w" imagesizes="(max-width: 820px) 84px, 200px" type="image/webp" fetchpriority="high">
-  <link rel="stylesheet" href="css/styles.css?v=23">
+  <link rel="stylesheet" href="css/styles.css?v=25">
   <!-- Datos para buscadores. Los días de reparto repiten el cronograma RUTAS de js/main.js:
        si cambias una ruta allá, cámbiala también aquí.
        PENDIENTE: añadir "streetAddress" (dirección exacta), "openingHoursSpecification" (horario),
@@ -58,7 +58,7 @@
       { "@type": "City", "name": "Shushufindi", "description": "Reparto: miércoles" },
       { "@type": "City", "name": "Joya de los Sachas", "description": "Reparto: jueves" },
       { "@type": "City", "name": "Francisco de Orellana (El Coca)", "description": "Reparto: lunes" },
-      { "@type": "City", "name": "Loreto" },
+      { "@type": "City", "name": "Loreto", "description": "Reparto: lunes" },
       { "@type": "Place", "name": "Vía Quito – El Amazonas", "description": "Reparto: sábado" }
     ]
   }
@@ -129,6 +129,7 @@
               <legend class="visually-hidden">Producto</legend>
               <div class="chips" data-quick-chips></div>
             </fieldset>
+            <p class="quick__price" data-quick-price aria-live="polite" hidden></p>
             <div class="quick__row">
               <div class="stepper" data-stepper>
                 <button type="button" data-step="-1" aria-label="Quitar uno"><svg aria-hidden="true"><use href="#i-minus"/></svg></button>
@@ -189,6 +190,7 @@
               <button type="button" data-step="1" aria-label="Agregar uno"><svg aria-hidden="true"><use href="#i-plus"/></svg></button>
             </div>
             <button class="btn btn--solid" type="button" data-spec-add>Agregar al pedido</button>
+            <button class="btn btn--line" type="button" data-spec-extra hidden>Agregar envase</button>
           </div>
         </div>
       </div>
@@ -515,7 +517,8 @@
       </header>
       <ul class="drawer__items" data-drawer-items></ul>
       <p class="drawer__empty" data-drawer-empty>Tu pedido está vacío. Elige una presentación en <a href="#productos" data-close-order>Productos</a> o usa el pedido rápido de arriba.</p>
-      <p class="drawer__total" data-drawer-total hidden><span>Total</span> <b data-v></b></p>
+      <button type="button" class="drawer__extra" data-add-envase hidden></button>
+      <p class="drawer__total" data-drawer-total hidden><span data-l>Total</span> <b data-v></b></p>
       <form class="drawer__form" data-drawer-form>
         <label class="field">
           <span>Ciudad</span>
@@ -537,7 +540,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
-  <script src="js/water-field.js?v=23" defer></script>
-  <script src="js/main.js?v=23" defer></script>
+  <script src="js/water-field.js?v=25" defer></script>
+  <script src="js/main.js?v=25" defer></script>
 </body>
 </html>
