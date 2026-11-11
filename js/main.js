@@ -525,8 +525,16 @@
   /* ── opiniones de clientes ── */
   (function voices() {
     const sec = $('[data-voices]');
-    const ok = TESTIMONIOS.filter(t => t && String(t.texto || '').trim() && String(t.nombre || '').trim());
+    let ok = TESTIMONIOS.filter(t => t && String(t.texto || '').trim() && String(t.nombre || '').trim());
+    // vista de ejemplo: solo con ?demo en la dirección, y rotulada como ejemplo. No se muestra al público.
+    const demo = !ok.length && /[?&]demo(=|&|$)/.test(location.search);
+    if (demo) ok = [
+      { texto: 'Aquí va la opinión de un cliente: una o dos frases sobre el servicio, con sus palabras.', nombre: 'Nombre del cliente', negocio: 'Nombre de su negocio', ciudad: 'Ciudad' },
+      { texto: 'Aquí va otra opinión. Puede ser más larga que la primera: la lista se acomoda sola aunque los textos no midan lo mismo.', nombre: 'Nombre del cliente', negocio: 'Nombre de su negocio', ciudad: 'Ciudad' },
+      { texto: 'Y aquí una tercera, más corta.', nombre: 'Nombre del cliente', ciudad: 'Ciudad' }
+    ];
     if (!sec || !ok.length) return;
+    if (demo) $('[data-voices-demo]').hidden = false;
     const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     $('[data-voices-list]').innerHTML = ok.map(t => `
       <li><figure class="voice">
