@@ -38,6 +38,12 @@
      Formato de cada una: { texto: '…', nombre: '…', negocio: '…', ciudad: '…' }  (negocio y ciudad son opcionales) */
   const TESTIMONIOS = [
   ];
+  // PENDIENTE: textos de MUESTRA para la maqueta (no son de clientes). Se reemplazan por opiniones reales.
+  const MUESTRAS = [
+    { texto: 'El camión pasa el día que dicen. Ya no me quedo sin agua para vender el fin de semana.', nombre: 'Tienda de barrio', ciudad: 'Lago Agrio' },
+    { texto: 'El hielo llega limpio y en cubos enteros. En los jugos y los cócteles se nota, y la funda con agarradera ayuda en la cocina.', nombre: 'Restaurante', ciudad: 'Shushufindi' },
+    { texto: 'Pido los garrafones por WhatsApp en un minuto y ya sé qué día me llegan.', nombre: 'Oficina', ciudad: 'Sacha' }
+  ];
 
   /* Analítica: GoatCounter (ligero, sin cookies). PENDIENTE: crear la cuenta en goatcounter.com
      y escribir aquí el código del sitio (la parte de "CODIGO.goatcounter.com"). Vacío = no se carga nada. */
@@ -526,13 +532,10 @@
   (function voices() {
     const sec = $('[data-voices]');
     let ok = TESTIMONIOS.filter(t => t && String(t.texto || '').trim() && String(t.nombre || '').trim());
-    // vista de ejemplo: solo con ?demo en la dirección, y rotulada como ejemplo. No se muestra al público.
-    const demo = !ok.length && /[?&]demo(=|&|$)/.test(location.search);
-    if (demo) ok = [
-      { texto: 'Aquí va la opinión de un cliente: una o dos frases sobre el servicio, con sus palabras.', nombre: 'Nombre del cliente', negocio: 'Nombre de su negocio', ciudad: 'Ciudad' },
-      { texto: 'Aquí va otra opinión. Puede ser más larga que la primera: la lista se acomoda sola aunque los textos no midan lo mismo.', nombre: 'Nombre del cliente', negocio: 'Nombre de su negocio', ciudad: 'Ciudad' },
-      { texto: 'Y aquí una tercera, más corta.', nombre: 'Nombre del cliente', ciudad: 'Ciudad' }
-    ];
+    // maqueta: mientras TESTIMONIOS esté vacío se muestran estos textos de muestra, rotulados como tales.
+    // Al cargar la primera opinión real, las muestras y el rótulo desaparecen solos.
+    const demo = !ok.length;
+    if (demo) ok = MUESTRAS;
     if (!sec || !ok.length) return;
     if (demo) $('[data-voices-demo]').hidden = false;
     const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

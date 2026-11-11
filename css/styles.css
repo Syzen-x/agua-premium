@@ -313,7 +313,7 @@ html { scrollbar-color: var(--acero) var(--agua); }
 /* ── opiniones ───────────────────────────── */
 .voices { padding: var(--section) 0; background: var(--blanco); }
 .voices h2 { font-size: var(--fs-5); max-width: 18ch; }
-.voices__demo { margin-top: 1.2rem; max-width: 40rem; padding: .7rem 1rem; border-radius: 14px; background: var(--agua); box-shadow: inset 0 0 0 1.5px var(--acero); font-size: var(--fs-1); font-weight: 600; color: var(--botella); }
+.voices__demo { display: inline-block; margin-top: 1.1rem; padding: .3rem .8rem; border-radius: 999px; background: var(--agua); box-shadow: inset 0 0 0 1.5px var(--acero); font-size: var(--fs-0); font-weight: 600; color: var(--acero-ink); }
 .voices__list { list-style: none; margin: clamp(2.5rem, 5vw, 4.5rem) 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: 0 clamp(2rem, 5vw, 4.5rem); }
 .voices__list li { padding: 1.8rem 0; border-top: 1.5px solid var(--agua-2); }
 .voice { margin: 0; display: grid; gap: 1.2rem; }
