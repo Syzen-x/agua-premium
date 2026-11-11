@@ -46,6 +46,7 @@
     shushufindi: { name: 'Shushufindi', alias: '', city: 'Shushufindi', roads: ['shushufindi'] },
     sacha: { name: 'Sacha', alias: 'Joya de los Sachas', city: 'Sacha', roads: ['sacha'] },
     coca: { name: 'Coca', alias: 'Francisco de Orellana', city: 'Coca', roads: ['sacha', 'coca'] },
+    loreto: { name: 'Loreto', alias: '', city: 'Loreto', roads: ['sacha', 'coca', 'loreto'] },
     viaquito: { name: 'Vía Quito – El Amazonas', alias: '', city: 'Vía Quito – El Amazonas', roads: [] }
   };
   const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
