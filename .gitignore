@@ -2,6 +2,7 @@
 /*
 !/.gitignore
 !/index.html
+!/sitemap.xml
 !/css/
 !/js/
 /js/caps-field.js
@@ -9,7 +10,7 @@
 /assets/img/*
 !/assets/img/app/
 !/assets/img/productos/
-!/assets/img/botellas-linea.jpg
+!/assets/img/compartir.jpg
 !/assets/img/botellas-linea-600.webp
 !/assets/img/botellas-linea-1000.webp
 !/assets/img/hielo-escena.webp
