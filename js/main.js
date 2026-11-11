@@ -622,6 +622,68 @@
     field.rippleAtClient(r.left + r.width / 2, r.bottom - r.height * 0.02);
   }
 
+  /* ── Proceso: el agua del marco se aclara etapa por etapa ──
+     c = claridad (0 turbia, 1 cristalina), uv = luz ultravioleta, oz = burbujas de ozono */
+  function stageWater(canvas) {
+    const ctx = canvas.getContext('2d');
+    const st = { c: 0, uv: 0, oz: 0 };
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const dust = Array.from({ length: 170 }, () => ({ x: Math.random(), y: Math.random(), r: rnd(0.7, 2.8), s: rnd(0.3, 1), ph: rnd(0, 6.28) }));
+    const bubbles = Array.from({ length: 30 }, () => ({ x: Math.random(), y: Math.random(), r: rnd(2, 7), s: rnd(0.5, 1.3), ph: rnd(0, 6.28) }));
+    let w = 0, h = 0, d = 1, raf = 0, on = false;
+    function size() {
+      const r = canvas.getBoundingClientRect();
+      d = Math.min(window.devicePixelRatio || 1, 1.5);
+      w = canvas.width = Math.max(2, Math.round(r.width * d));
+      h = canvas.height = Math.max(2, Math.round(r.height * d));
+    }
+    function draw(now) {
+      raf = on ? requestAnimationFrame(draw) : 0;
+      const t = now / 1000, c = st.c;
+      // debajo corre el mismo agua del inicio (js/water-field.js); aquí va lo que la enturbia
+      ctx.clearRect(0, 0, w, h);
+      const murk = 1 - c;
+      if (murk > 0.005) {
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, `rgba(150,162,140,${0.78 * murk})`);
+        g.addColorStop(1, `rgba(92,108,92,${0.9 * murk})`);
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      }
+      // sedimento: se va quedando en los filtros
+      const n = Math.round(dust.length * Math.pow(1 - c, 1.25));
+      ctx.fillStyle = `rgba(70,80,64,${0.2 + 0.4 * (1 - c)})`;
+      for (let i = 0; i < n; i++) {
+        const p = dust[i];
+        const x = (p.x + Math.sin(t * 0.35 * p.s + p.ph) * 0.025) * w;
+        const y = ((p.y + t * 0.014 * p.s) % 1) * h;
+        ctx.beginPath(); ctx.arc(x, y, p.r * d, 0, 6.283); ctx.fill();
+      }
+      // luz ultravioleta: una franja que barre el agua
+      if (st.uv > 0.01) {
+        const y = (0.5 + 0.42 * Math.sin(t * 1.1)) * h, bh = h * 0.42;
+        const u = ctx.createLinearGradient(0, y - bh / 2, 0, y + bh / 2);
+        u.addColorStop(0, 'rgba(126,92,255,0)'); u.addColorStop(0.5, `rgba(126,92,255,${0.42 * st.uv})`); u.addColorStop(1, 'rgba(126,92,255,0)');
+        ctx.fillStyle = u; ctx.fillRect(0, y - bh / 2, w, bh);
+      }
+      // ozono: burbujas finas que suben
+      if (st.oz > 0.01) {
+        ctx.lineWidth = 1.3 * d;
+        for (const b of bubbles) {
+          const y = h * 1.05 - ((b.y + t * 0.11 * b.s) % 1) * h * 1.15;
+          const x = (b.x + Math.sin(t * 1.3 * b.s + b.ph) * 0.018) * w;
+          ctx.strokeStyle = `rgba(255,255,255,${0.75 * st.oz})`;
+          ctx.fillStyle = `rgba(255,255,255,${0.16 * st.oz})`;
+          ctx.beginPath(); ctx.arc(x, y, b.r * d, 0, 6.283); ctx.fill(); ctx.stroke();
+        }
+      }
+    }
+    return {
+      state: st,
+      size,
+      run(v) { if (v === on) return; on = v; if (on) { size(); raf = requestAnimationFrame(draw); } else cancelAnimationFrame(raf); }
+    };
+  }
+
   function loadScript(src) {
     return new Promise((ok, fail) => {
       const s = document.createElement('script');
@@ -681,11 +743,52 @@
     const drop = $('[data-pipe-drop]');
     const flow = $('[data-pipe-flow]');
     const nodeY = $$('[data-pipe-nodes] circle').map(c => Number(c.getAttribute('cy')));
+
+    // el marco de la foto cuenta el proceso: agua que se aclara y, al final, las fotos reales
+    const stage = $('[data-stage]');
+    const stageImgs = $$('[data-stage-img]', stage);
+    const stageCap = $('[data-stage-cap]');
+    const waterEl = $('[data-stage-water]');
+    const murkEl = $('[data-stage-murk]');
+    const water = murkEl && murkEl.getContext ? stageWater(murkEl) : null;
+    const caustics = water && window.WaterField ? new window.WaterField($('[data-stage-caustics]')) : null;
+    const stageNames = steps.map(s => $('h3', s).textContent.trim());
+    const CLARITY = [0.06, 0.26, 0.44, 0.68, 0.93, 1, 1];     // cuánto se ha aclarado al llegar a cada etapa
+    let stageNow = 0, photoTimer = 0, photoAt = 0, stageSeen = false;
+    function showPhoto(i) {
+      photoAt = i;
+      stageImgs.forEach((im, k) => im.classList.toggle('is-on', k === i));
+      stageCap.textContent = stageImgs[i].dataset.stageImg;
+    }
+    function setStage(n) {
+      if (!water || n === stageNow) return;
+      stageNow = n;
+      clearInterval(photoTimer);
+      const last = n >= steps.length;
+      waterEl.classList.toggle('is-on', !last);
+      stageCap.hidden = false;
+      if (last) {
+        showPhoto(1);                                          // primero el envasado, luego alterna con el hielo
+        photoTimer = setInterval(() => showPhoto(1 - photoAt), 3400);
+      } else {
+        stageImgs.forEach(im => im.classList.remove('is-on'));
+        stageCap.textContent = `Etapa ${n} de ${steps.length - 1}: ${stageNames[n - 1]}`;
+        gsap.to(water.state, { c: CLARITY[n - 1], uv: n === 6 ? 1 : 0, oz: n === 7 ? 1 : 0, duration: 1.1, ease: 'power2.out', overwrite: true });
+      }
+      water.run(stageSeen && !last);
+      if (caustics && stageSeen && !last) { caustics.resize(); caustics.start(); }
+    }
+    if (water && 'IntersectionObserver' in window) {
+      new IntersectionObserver(([en]) => { stageSeen = en.isIntersecting; water.run(stageSeen && stageNow < steps.length); }).observe(stage);
+      window.addEventListener('resize', () => water.size(), { passive: true });
+      setStage(1);
+      caustics && caustics.resize();
+    }
     gsap.set(flow, { scaleY: 0 });
     ST.create({
       trigger: '.process__copy .steps',
       start: 'top 65%',
-      end: 'bottom 55%',
+      end: 'bottom 80%',
       scrub: 0.6,
       onUpdate(self) {
         const p = self.progress;
@@ -697,6 +800,7 @@
         const active = nodeY.filter(n => y + 6 >= n).length;
         nodes.forEach((n, i) => n.classList.toggle('is-on', i < active));
         steps.forEach((s, i) => s.classList.toggle('is-on', i < Math.max(1, active)));
+        setStage(Math.max(1, active));
       }
     });
     // en móvil el tubo está oculto: cada paso se enciende al llegar

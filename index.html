@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Unbounded:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="assets/img/productos/agua-625-hero-200.webp" imagesrcset="assets/img/productos/agua-625-hero-200.webp 200w, assets/img/productos/agua-625-hero-300.webp 300w, assets/img/productos/agua-625-hero-400.webp 400w" imagesizes="(max-width: 820px) 84px, 200px" type="image/webp" fetchpriority="high">
-  <link rel="stylesheet" href="css/styles.css?v=32">
+  <link rel="stylesheet" href="css/styles.css?v=33">
   <!-- Datos para buscadores. Los días de reparto repiten el cronograma RUTAS de js/main.js:
        si cambias una ruta allá, cámbiala también aquí. Lo mismo con los precios (NEGOCIO.precios).
        PENDIENTE: añadir "streetAddress" (dirección exacta), "openingHoursSpecification" (horario),
@@ -255,11 +255,16 @@
                 <path d="M60 -26C60 -26 44 -6 44 6a16 16 0 0 0 32 0C76 -6 60 -26 60 -26Z" data-drop-shape/>
               </g>
             </svg>
-            <figure class="process__photo">
-              <picture>
-                <source srcset="assets/img/planta-hielo-600.webp 600w, assets/img/planta-hielo.webp 1000w" sizes="(max-width: 820px) 92vw, 36vw" type="image/webp">
-                <img src="assets/img/planta-hielo.jpg" alt="Trabajador de la planta, con malla para el cabello, sostiene una funda de 2 kg de hielo Ice Fresh" width="1000" height="1334" loading="lazy">
-              </picture>
+            <!-- El marco cambia al avanzar por las etapas: primero el agua, que se va aclarando (dibujada por js/main.js);
+                 al final, las fotos reales del envasado y del hielo. Sin animaciones se ve la foto fija. -->
+            <figure class="process__photo" data-stage>
+              <img class="stage__img is-on" data-stage-img="Congelado: Ice Fresh" src="assets/img/planta-hielo.webp" srcset="assets/img/planta-hielo-600.webp 600w, assets/img/planta-hielo.webp 1000w" sizes="(max-width: 820px) 92vw, 36vw" alt="Trabajador de la planta, con malla para el cabello, sostiene una funda de 2 kg de hielo Ice Fresh" width="1000" height="1334" loading="lazy">
+              <img class="stage__img" data-stage-img="Envasado: Agua Premium" src="assets/img/botellas-linea-v-1000.webp" srcset="assets/img/botellas-linea-v-600.webp 600w, assets/img/botellas-linea-v-1000.webp 1000w" sizes="(max-width: 820px) 92vw, 36vw" alt="Botella de Agua Premium 625 ml recién tapada, sobre la línea de envasado de la planta" width="1000" height="1333" loading="lazy">
+              <div class="stage__water" data-stage-water aria-hidden="true">
+                <canvas data-stage-caustics></canvas>
+                <canvas data-stage-murk></canvas>
+              </div>
+              <figcaption class="stage__cap" data-stage-cap aria-hidden="true" hidden></figcaption>
             </figure>
           </div>
         </div>
@@ -588,7 +593,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
-  <script src="js/water-field.js?v=32" defer></script>
-  <script src="js/main.js?v=32" defer></script>
+  <script src="js/water-field.js?v=33" defer></script>
+  <script src="js/main.js?v=33" defer></script>
 </body>
 </html>
