@@ -490,7 +490,10 @@
   if (fixedEl && fixed.length) fixedEl.textContent = ` a ${lista(fixed)}`;
 
   /* ── mapa de cobertura ── */
-  $('[data-towns]').innerHTML = Object.entries(ZONAS).map(([k, z]) => `
+  // en el orden de la semana: primero la zona cuya ruta cae antes (lunes, martes…); sin día fijo, al final
+  const primerDia = (k) => { const d = diasDe(k); return d.length ? SEMANA.indexOf(d[0]) : 99; };
+  const zonasPorDia = Object.entries(ZONAS).sort((a, b) => primerDia(a[0]) - primerDia(b[0]));
+  $('[data-towns]').innerHTML = zonasPorDia.map(([k, z]) => `
     <li><button type="button" data-town="${k}" aria-pressed="false">
       <span class="towns__name">${z.name}${z.alias ? `<small>${z.alias}</small>` : ''}</span>
       <span class="towns__days">${diasTexto(k) || 'día por confirmar'}</span>
