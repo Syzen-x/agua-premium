@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Unbounded:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="assets/img/productos/agua-625-hero-200.webp" imagesrcset="assets/img/productos/agua-625-hero-200.webp 200w, assets/img/productos/agua-625-hero-300.webp 300w, assets/img/productos/agua-625-hero-400.webp 400w" imagesizes="(max-width: 820px) 84px, 200px" type="image/webp" fetchpriority="high">
-  <link rel="stylesheet" href="css/styles.css?v=25">
+  <link rel="stylesheet" href="css/styles.css?v=26">
   <!-- Datos para buscadores. Los días de reparto repiten el cronograma RUTAS de js/main.js:
        si cambias una ruta allá, cámbiala también aquí.
        PENDIENTE: añadir "streetAddress" (dirección exacta), "openingHoursSpecification" (horario),
@@ -297,6 +297,7 @@
             <h2 id="ice-title">Hielo Ice Fresh, más que hielo.</h2>
             <p>Calidad que se siente en cada cubo: hielo 100% purificado, en cubitos cristalinos, en funda de 2 kg con agarradera para llevarla sin que se resbale.</p>
             <button class="btn btn--solid" type="button" data-add="hielo-2kg">Agregar Ice Fresh 2 kg al pedido</button>
+            <p class="ice__price" data-ice-price hidden></p>
           </div>
           <dl class="uses">
             <div><dt>Bebidas</dt><dd>Jugos, gaseosas y cócteles.</dd></div>
@@ -540,7 +541,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
-  <script src="js/water-field.js?v=25" defer></script>
-  <script src="js/main.js?v=25" defer></script>
+  <script src="js/water-field.js?v=26" defer></script>
+  <script src="js/main.js?v=26" defer></script>
 </body>
 </html>

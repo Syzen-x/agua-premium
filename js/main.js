@@ -20,7 +20,7 @@
       'agua-galon': 3.5,   // 3,8 litros
       'agua-20l': 1.5,     // bidón 20 litros, solo el líquido
       'envase-20l': 7.5,   // envase plástico del bidón (bidón completo = envase + líquido)
-      'hielo-2kg': null    // PENDIENTE: el hielo no está en la lista oficial de precios
+      'hielo-2kg': 0.75    // la funda; pedido mínimo de 10 fundas (ver "min" en el catálogo)
     },
     horario: '',            // horario de atención y de reparto, en una frase
     pedidoMinimo: '',       // pedido mínimo, en una frase
@@ -124,8 +124,8 @@
     {
       id: 'hielo-2kg', short: 'Hielo 2 kg', name: 'Ice Fresh Premium 2 kg', h: 330,
       desc: 'Hielo 100% purificado en cubitos cristalinos. Funda de 2 kg con agarradera.',
-      facts: ['Hielo 100% purificado', 'Funda con agarradera', 'Cubitos cristalinos'],
-      unit: 'la funda',
+      facts: ['Mínimo 10 fundas', 'Hielo 100% purificado', 'Funda con agarradera', 'Cubitos cristalinos'],
+      unit: 'la funda, mínimo 10 fundas', min: 10,
       sizes: [220, 500], iw: 1010, ih: 1498
     }
   ];
@@ -134,6 +134,8 @@
   const byId = Object.fromEntries([...PRODUCTS, ENVASE].map(p => [p.id, p]));
   // nombre con la unidad de venta, para el pedido y el mensaje
   const label = (id) => byId[id].name + (byId[id].pack ? ` (${byId[id].pack})` : '');
+  // cantidad mínima por pedido (1 si el producto no tiene mínimo)
+  const minOf = (id) => (byId[id] && byId[id].min) || 1;
   const HERO_ID = 'agua-625';
   const HERO_SIZES = [200, 300, 400];
   // variantes de una imagen: 1x y 2x del tamaño mostrado
@@ -188,15 +190,19 @@
     try { const o = JSON.parse(localStorage.getItem('ap-order') || '{}'); return typeof o === 'object' && o ? o : {}; }
     catch (e) { return {}; }
   }
+  Object.keys(order).forEach(id => {
+    if (!byId[id] || !(order[id] > 0)) delete order[id];
+    else if (order[id] < minOf(id)) order[id] = minOf(id);
+  });
   function save() { try { localStorage.setItem('ap-order', JSON.stringify(order)); } catch (e) { /* sin almacenamiento */ } }
   function count() { return Object.values(order).reduce((a, b) => a + b, 0); }
   function add(id, qty) {
     if (!byId[id] || qty <= 0) return;
-    order[id] = Math.min(999, (order[id] || 0) + qty);
+    order[id] = Math.min(999, Math.max(minOf(id), (order[id] || 0) + qty));
     save(); renderOrder(true);
   }
   function setQty(id, qty) {
-    if (qty <= 0) delete order[id]; else order[id] = Math.min(999, qty);
+    if (qty < minOf(id)) delete order[id]; else order[id] = Math.min(999, qty);
     save(); renderOrder(false);
   }
   function waURL(text) { return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`; }
@@ -220,12 +226,13 @@
 
   /* ── stepper reutilizable ── */
   function stepper(root, initial, onChange) {
-    let v = initial;
+    let v = initial, min = 1;
     const out = $('[data-step-value]', root);
-    const set = (n) => { v = Math.max(1, Math.min(999, n)); out.textContent = v; onChange && onChange(v); };
+    const set = (n) => { v = Math.max(min, Math.min(999, n)); out.textContent = v; onChange && onChange(v); };
     $$('[data-step]', root).forEach(b => b.addEventListener('click', () => set(v + Number(b.dataset.step))));
     set(initial);
-    return { get: () => v, set };
+    // al cambiar de producto: nuevo mínimo, y la cantidad vuelve a ese mínimo
+    return { get: () => v, set, reset: (m) => { min = m; set(m); } };
   }
 
   /* ── ciudad del pedido: la misma en el hero, en el panel y en Cobertura ── */
@@ -310,6 +317,7 @@
     if (e.target.name !== 'quick-product') return;
     heroShow(e.target.value);
     showQuickPrice(e.target.value);
+    quickStep.reset(minOf(e.target.value));
   });
 
   /* ── la línea de productos ── */
@@ -344,7 +352,7 @@
     $('[data-spec-extra]').hidden = !withEnvase;
     $('[data-spec-facts]').innerHTML = p.facts.map(f => `<li>${f}</li>`).join('');
     $('[data-spec-add]').textContent = `Agregar ${p.short} al pedido`;
-    specStep.set(1);
+    specStep.reset(minOf(id));
     spec.classList.remove('is-swap'); void spec.offsetWidth; spec.classList.add('is-swap');
   }
   items.forEach((b, i) => {
@@ -360,6 +368,9 @@
   $('[data-spec-add]').addEventListener('click', () => add(current, specStep.get()));
   $$('[data-add]').forEach(b => b.addEventListener('click', () => add(b.dataset.add, 1)));
   $('[data-spec-extra]').addEventListener('click', () => add(ENVASE.id, specStep.get()));
+  // sección Ice Fresh: precio y mínimo junto al botón
+  const icePrice = priceOf('hielo-2kg'), iceEl = $('[data-ice-price]');
+  if (iceEl && icePrice !== null) { iceEl.textContent = `${money(icePrice)} ${byId['hielo-2kg'].unit}.`; iceEl.hidden = false; }
 
   /* ── barra y panel del pedido ── */
   const countEl = $('[data-count]');
@@ -384,7 +395,7 @@
     list.innerHTML = entries.map(([id, q]) => {
       const p = priceOf(id);
       return `
-      <li data-line="${id}"><span>${label(id)}${p !== null ? `<small>${q} × ${money(p)} = ${money(p * q)}</small>` : ''}</span>
+      <li data-line="${id}"><span>${label(id)}${p !== null ? `<small>${q} × ${money(p)} = ${money(p * q)}${minOf(id) > 1 ? `, mínimo ${minOf(id)}` : ''}</small>` : ''}</span>
         <div class="stepper"><button type="button" data-d="-1" aria-label="Quitar uno de ${byId[id].name}"><svg aria-hidden="true"><use href="#i-minus"/></svg></button>
         <output aria-live="polite">${q}</output>
         <button type="button" data-d="1" aria-label="Agregar uno de ${byId[id].name}"><svg aria-hidden="true"><use href="#i-plus"/></svg></button></div>
