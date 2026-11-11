@@ -247,9 +247,6 @@ html { scrollbar-color: var(--acero) var(--agua); }
 .pipe__nodes circle.is-on { fill: var(--gota); stroke: var(--gota); }
 .pipe__drop path { fill: var(--gota); }
 .process__photo { position: relative; margin: 0; border-radius: 160px 160px var(--radius) var(--radius); overflow: hidden; aspect-ratio: 3 / 4; box-shadow: var(--shadow-lift); background: radial-gradient(ellipse 75% 60% at 50% 42%, var(--blanco), var(--agua-2)); isolation: isolate; }
-.stage__img, .stage__bottle { opacity: 0; transition: opacity .9s var(--ease-liquid); }
-.stage__img { position: absolute; inset: 0; }
-.stage__img.is-on, .stage__bottle.is-on { opacity: 1; }
 /* la botella: el agua va por detrás, recortada a su silueta, y la botella translúcida encima */
 .stage__bottle { position: absolute; left: 50%; top: 4.5%; height: 83%; aspect-ratio: 540 / 1980; transform: translateX(-50%); filter: drop-shadow(0 22px 22px rgba(11,61,34,.2)); }
 .stage__bottle::after { content: ""; position: absolute; left: 50%; bottom: -3.5%; width: 230%; height: 6%; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(11,61,34,.28), rgba(11,61,34,0)); z-index: -1; }

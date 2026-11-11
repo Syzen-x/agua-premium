@@ -738,42 +738,31 @@
     const flow = $('[data-pipe-flow]');
     const nodeY = $$('[data-pipe-nodes] circle').map(c => Number(c.getAttribute('cy')));
 
-    // el marco de la foto cuenta el proceso: agua que se aclara y, al final, las fotos reales
+    // el marco cuenta el proceso con una botella: su agua se aclara etapa por etapa
     const stage = $('[data-stage]');
-    const stageImgs = $$('[data-stage-img]', stage);
     const stageCap = $('[data-stage-cap]');
-    const waterEl = $('[data-stage-bottle]');
     const murkEl = $('[data-stage-murk]');
     const water = murkEl && murkEl.getContext ? stageWater(murkEl, $('[data-stage-tint]')) : null;
     const caustics = water && window.WaterField ? new window.WaterField($('[data-stage-caustics]')) : null;
     const stageNames = steps.map(s => $('h3', s).textContent.trim());
-    const CLARITY = [0.06, 0.26, 0.44, 0.68, 0.93, 1, 1];     // cuánto se ha aclarado al llegar a cada etapa
-    let stageNow = 0, photoTimer = 0, photoAt = 0, stageSeen = false;
-    function showPhoto(i) {
-      photoAt = i;
-      stageImgs.forEach((im, k) => im.classList.toggle('is-on', k === i));
-      stageCap.textContent = stageImgs[i].dataset.stageImg;
-    }
+    const CLARITY = [0.06, 0.26, 0.44, 0.68, 0.93, 1, 1, 1];  // cuánto se ha aclarado al llegar a cada etapa
+    let stageNow = 0, stageSeen = false;
     function setStage(n) {
       if (!water || n === stageNow) return;
       stageNow = n;
-      clearInterval(photoTimer);
       const last = n >= steps.length;
-      waterEl.classList.toggle('is-on', !last);
       stageCap.hidden = false;
-      if (last) {
-        showPhoto(1);                                          // primero el envasado, luego alterna con el hielo
-        photoTimer = setInterval(() => showPhoto(1 - photoAt), 3400);
-      } else {
-        stageImgs.forEach(im => im.classList.remove('is-on'));
-        stageCap.textContent = `Etapa ${n} de ${steps.length - 1}: ${stageNames[n - 1]}`;
-        gsap.to(water.state, { c: CLARITY[n - 1], uv: n === 6 ? 1 : 0, oz: n === 7 ? 1 : 0, duration: 1.1, ease: 'power2.out', overwrite: true });
-      }
-      water.run(stageSeen && !last);
-      if (caustics && stageSeen && !last) { caustics.resize(); caustics.start(); }
+      stageCap.textContent = last ? 'Agua purificada, lista' : `Etapa ${n} de ${steps.length - 1}: ${stageNames[n - 1]}`;
+      gsap.to(water.state, { c: CLARITY[n - 1], uv: n === 6 ? 1 : 0, oz: n === 7 ? 1 : 0, duration: 1.1, ease: 'power2.out', overwrite: true });
+      // al terminar, una onda recorre el agua ya limpia
+      if (last && caustics && caustics.ok) caustics.ripple(caustics.w / 2, caustics.h * 0.62);
     }
     if (water && 'IntersectionObserver' in window) {
-      new IntersectionObserver(([en]) => { stageSeen = en.isIntersecting; water.run(stageSeen && stageNow < steps.length); }).observe(stage);
+      new IntersectionObserver(([en]) => {
+        stageSeen = en.isIntersecting;
+        water.run(stageSeen);
+        if (stageSeen && caustics) { caustics.resize(); caustics.start(); }
+      }).observe(stage);
       window.addEventListener('resize', () => water.size(), { passive: true });
       setStage(1);
       caustics && caustics.resize();
