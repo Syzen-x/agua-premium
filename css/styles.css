@@ -246,10 +246,19 @@ html { scrollbar-color: var(--acero) var(--agua); }
 .pipe__nodes circle { fill: var(--blanco); stroke: var(--acero); stroke-width: 4; transition: fill .4s, stroke .4s; }
 .pipe__nodes circle.is-on { fill: var(--gota); stroke: var(--gota); }
 .pipe__drop path { fill: var(--gota); }
-.process__photo { position: relative; margin: 0; border-radius: 160px 160px var(--radius) var(--radius); overflow: hidden; aspect-ratio: 3 / 4; box-shadow: var(--shadow-lift); background: var(--agua-2); isolation: isolate; }
-.stage__img, .stage__water { position: absolute; inset: 0; opacity: 0; transition: opacity .9s var(--ease-liquid); }
-.stage__img.is-on, .stage__water.is-on { opacity: 1; }
+.process__photo { position: relative; margin: 0; border-radius: 160px 160px var(--radius) var(--radius); overflow: hidden; aspect-ratio: 3 / 4; box-shadow: var(--shadow-lift); background: radial-gradient(ellipse 75% 60% at 50% 42%, var(--blanco), var(--agua-2)); isolation: isolate; }
+.stage__img, .stage__bottle { opacity: 0; transition: opacity .9s var(--ease-liquid); }
+.stage__img { position: absolute; inset: 0; }
+.stage__img.is-on, .stage__bottle.is-on { opacity: 1; }
+/* la botella: el agua va por detrás, recortada a su silueta, y la botella translúcida encima */
+.stage__bottle { position: absolute; left: 50%; top: 4.5%; height: 83%; aspect-ratio: 540 / 1980; transform: translateX(-50%); filter: drop-shadow(0 22px 22px rgba(11,61,34,.2)); }
+.stage__bottle::after { content: ""; position: absolute; left: 50%; bottom: -3.5%; width: 230%; height: 6%; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(11,61,34,.28), rgba(11,61,34,0)); z-index: -1; }
+.stage__water { position: absolute; inset: 0; -webkit-mask: url("../assets/img/productos/agua-625-silueta.webp") center / 100% 100% no-repeat; mask: url("../assets/img/productos/agua-625-silueta.webp") center / 100% 100% no-repeat; }
 .stage__water canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stage__bottle img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; }
+/* lo que enturbia el agua va sobre el plástico transparente, sin tocar la etiqueta ni la tapa */
+.stage__tint, .stage__murk { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; -webkit-mask: url("../assets/img/productos/agua-625-pet.webp") center / 100% 100% no-repeat; mask: url("../assets/img/productos/agua-625-pet.webp") center / 100% 100% no-repeat; }
+.stage__tint { background: linear-gradient(180deg, #b79a55, #8a6f38); mix-blend-mode: multiply; opacity: 0; }
 .stage__cap { position: absolute; left: 50%; bottom: 1.1rem; transform: translateX(-50%); max-width: calc(100% - 2rem); padding: .45rem 1rem; border-radius: 999px; background: var(--botella); color: var(--blanco); font-family: var(--display); font-size: .82rem; font-weight: 500; line-height: 1.2; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 10px 22px -12px rgba(11,61,34,.7); }
 .process__photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
 .process__copy h2 { font-size: var(--fs-5); }

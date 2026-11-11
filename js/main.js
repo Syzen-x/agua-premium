@@ -624,12 +624,12 @@
 
   /* ── Proceso: el agua del marco se aclara etapa por etapa ──
      c = claridad (0 turbia, 1 cristalina), uv = luz ultravioleta, oz = burbujas de ozono */
-  function stageWater(canvas) {
+  function stageWater(canvas, tint) {
     const ctx = canvas.getContext('2d');
     const st = { c: 0, uv: 0, oz: 0 };
     const rnd = (a, b) => a + Math.random() * (b - a);
-    const dust = Array.from({ length: 170 }, () => ({ x: Math.random(), y: Math.random(), r: rnd(0.7, 2.8), s: rnd(0.3, 1), ph: rnd(0, 6.28) }));
-    const bubbles = Array.from({ length: 30 }, () => ({ x: Math.random(), y: Math.random(), r: rnd(2, 7), s: rnd(0.5, 1.3), ph: rnd(0, 6.28) }));
+    const dust = Array.from({ length: 150 }, () => ({ x: Math.random(), y: Math.random(), r: rnd(0.6, 2.2), s: rnd(0.3, 1), ph: rnd(0, 6.28) }));
+    const bubbles = Array.from({ length: 34 }, () => ({ x: Math.random(), y: Math.random(), r: rnd(1.5, 4.5), s: rnd(0.5, 1.3), ph: rnd(0, 6.28) }));
     let w = 0, h = 0, d = 1, raf = 0, on = false;
     function size() {
       const r = canvas.getBoundingClientRect();
@@ -640,18 +640,12 @@
     function draw(now) {
       raf = on ? requestAnimationFrame(draw) : 0;
       const t = now / 1000, c = st.c;
-      // debajo corre el mismo agua del inicio (js/water-field.js); aquí va lo que la enturbia
+      // el agua limpia corre por detrás (js/water-field.js); aquí va lo que la enturbia, sobre la botella
       ctx.clearRect(0, 0, w, h);
-      const murk = 1 - c;
-      if (murk > 0.005) {
-        const g = ctx.createLinearGradient(0, 0, 0, h);
-        g.addColorStop(0, `rgba(150,162,140,${0.78 * murk})`);
-        g.addColorStop(1, `rgba(92,108,92,${0.9 * murk})`);
-        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-      }
+      if (tint) tint.style.opacity = (0.92 * (1 - c)).toFixed(3);
       // sedimento: se va quedando en los filtros
       const n = Math.round(dust.length * Math.pow(1 - c, 1.25));
-      ctx.fillStyle = `rgba(70,80,64,${0.2 + 0.4 * (1 - c)})`;
+      ctx.fillStyle = `rgba(74,56,24,${0.25 + 0.5 * (1 - c)})`;
       for (let i = 0; i < n; i++) {
         const p = dust[i];
         const x = (p.x + Math.sin(t * 0.35 * p.s + p.ph) * 0.025) * w;
@@ -662,7 +656,7 @@
       if (st.uv > 0.01) {
         const y = (0.5 + 0.42 * Math.sin(t * 1.1)) * h, bh = h * 0.42;
         const u = ctx.createLinearGradient(0, y - bh / 2, 0, y + bh / 2);
-        u.addColorStop(0, 'rgba(126,92,255,0)'); u.addColorStop(0.5, `rgba(126,92,255,${0.42 * st.uv})`); u.addColorStop(1, 'rgba(126,92,255,0)');
+        u.addColorStop(0, 'rgba(126,92,255,0)'); u.addColorStop(0.5, `rgba(126,92,255,${0.6 * st.uv})`); u.addColorStop(1, 'rgba(126,92,255,0)');
         ctx.fillStyle = u; ctx.fillRect(0, y - bh / 2, w, bh);
       }
       // ozono: burbujas finas que suben
@@ -748,9 +742,9 @@
     const stage = $('[data-stage]');
     const stageImgs = $$('[data-stage-img]', stage);
     const stageCap = $('[data-stage-cap]');
-    const waterEl = $('[data-stage-water]');
+    const waterEl = $('[data-stage-bottle]');
     const murkEl = $('[data-stage-murk]');
-    const water = murkEl && murkEl.getContext ? stageWater(murkEl) : null;
+    const water = murkEl && murkEl.getContext ? stageWater(murkEl, $('[data-stage-tint]')) : null;
     const caustics = water && window.WaterField ? new window.WaterField($('[data-stage-caustics]')) : null;
     const stageNames = steps.map(s => $('h3', s).textContent.trim());
     const CLARITY = [0.06, 0.26, 0.44, 0.68, 0.93, 1, 1];     // cuánto se ha aclarado al llegar a cada etapa
