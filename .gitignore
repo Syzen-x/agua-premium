@@ -1,0 +1,18 @@
+# Solo se publica el sitio: todo lo demás queda local
+/*
+!/.gitignore
+!/index.html
+!/css/
+!/js/
+/js/caps-field.js
+!/assets/
+/assets/img/*
+!/assets/img/app/
+!/assets/img/productos/
+!/assets/img/botellas-linea.jpg
+!/assets/img/hielo-escena.webp
+!/assets/img/planta-hielo.jpg
+!/assets/img/planta-hielo.webp
+/assets/img/productos/*-original.webp
+/assets/img/productos/agua-625-v1*.webp
+!/.nojekyll
