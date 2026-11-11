@@ -496,6 +496,7 @@
       <span class="towns__days">${diasTexto(k) || 'día por confirmar'}</span>
     </button></li>`).join('');
   const cta = $('[data-town-cta]');
+  let travel = null;   // lo define motion(): un punto recorre la ruta elegida
   function pickTown(key, initial) {
     const t = ZONAS[key];
     $$('[data-town]').forEach(b => b.setAttribute('aria-pressed', b.dataset.town === key));
@@ -505,6 +506,7 @@
     $('[data-town-next]').textContent = proximoTexto(key);
     cta.href = waURL(`Hola Premium Distribuciones, quiero hacer un pedido en ${t.city}.`);
     setCity(key, initial);
+    if (!initial && travel) travel(t.roads);
   }
   $$('[data-town]').forEach(b => b.addEventListener('click', () => pickTown(b.dataset.town)));
   $$('[data-town-dot]').forEach(g => g.addEventListener('click', () => pickTown(g.dataset.townDot)));
@@ -666,6 +668,53 @@
     if (window.matchMedia('(max-width: 820px)').matches) {
       steps.forEach(s => ST.create({ trigger: s, start: 'top 75%', onEnter: () => s.classList.add('is-on') }));
     }
+
+    // las presentaciones llegan a la repisa, una tras otra
+    // (nada queda oculto a la espera: el estado inicial se aplica recién al entrar en pantalla)
+    ST.create({
+      trigger: '.lineup', start: 'top 82%', once: true,
+      onEnter: () => gsap.from('.item img', { y: 46, opacity: 0, duration: 0.9, ease: 'expo.out', stagger: 0.09, clearProps: 'transform,opacity' })
+    });
+
+    // la foto del hielo y la de la planta se asientan mientras pasan
+    $$('.ice__scene img, .trade__photo img').forEach(img => {
+      gsap.fromTo(img, { scale: 1.14 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: img.parentElement, start: 'top bottom', end: 'bottom top', scrub: true } });
+    });
+
+    // mapa: los pueblos aparecen en orden de ruta y un punto recorre el camino elegido
+    ST.create({
+      trigger: '.map', start: 'top 75%', once: true,
+      onEnter: () => {
+        gsap.from('.map__towns circle:not(.halo)', { scale: 0, transformOrigin: '50% 50%', duration: 0.6, ease: 'back.out(2.2)', stagger: 0.1, clearProps: 'transform' });
+        gsap.from('.map__towns text, .map__roads path', { opacity: 0, duration: 0.8, stagger: 0.06, clearProps: 'opacity' });
+      }
+    });
+    const truck = $('[data-truck]');
+    const trip = { t: 0 };
+    travel = (roads) => {
+      gsap.killTweensOf(trip);
+      gsap.killTweensOf(truck);
+      const paths = roads.map(r => $(`[data-road="${r}"]`)).filter(Boolean);
+      if (!truck || !paths.length) { truck && gsap.set(truck, { opacity: 0 }); return; }
+      const lens = paths.map(p => p.getTotalLength());
+      const total = lens.reduce((a, b) => a + b, 0);
+      trip.t = 0;
+      gsap.set(truck, { opacity: 1 });
+      gsap.to(trip, {
+        t: 1, duration: 0.55 + total / 420, ease: 'power2.inOut',
+        onUpdate() {
+          let l = trip.t * total, i = 0;
+          while (i < lens.length - 1 && l > lens[i]) { l -= lens[i]; i++; }
+          const pt = paths[i].getPointAtLength(l);
+          truck.setAttribute('cx', pt.x); truck.setAttribute('cy', pt.y);
+        },
+        onComplete() { gsap.to(truck, { opacity: 0, duration: 0.5, delay: 0.2 }); }
+      });
+    };
+
+    // los dos teléfonos de la app se mueven a distinto ritmo
+    gsap.to('.phone--front', { yPercent: -7, ease: 'none', scrollTrigger: { trigger: '.phones', start: 'top bottom', end: 'bottom top', scrub: true } });
+    gsap.to('.phone--back', { yPercent: 7, ease: 'none', scrollTrigger: { trigger: '.phones', start: 'top bottom', end: 'bottom top', scrub: true } });
 
     // la botella del hero se hunde en la línea al bajar
     gsap.to('[data-bottle-par]', { yPercent: 8, rotation: 4, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
