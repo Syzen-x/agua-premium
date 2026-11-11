@@ -19,7 +19,8 @@
 !/assets/img/planta-hielo.webp
 /assets/img/productos/*-original.webp
 /assets/img/productos/agua-625-v1*.webp
-/assets/img/productos/hielo-2kg-v1.webp
+/assets/img/productos/*-v1.webp
+/assets/img/app/*-v1.webp
 # tamaño completo: la web usa las variantes -NNN.webp (1x y 2x)
 /assets/img/productos/agua-625.webp
 /assets/img/productos/agua-625-hero.webp

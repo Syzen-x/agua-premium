@@ -92,6 +92,7 @@
 
   /* ── catálogo (solo datos confirmados por la marca) ── */
   const IMG = 'assets/img/productos/';
+  const IMG_V = '?v=2';   // súbelo cuando se reemplace una imagen de producto con el mismo nombre
   const PRODUCTS = [
     {
       id: 'agua-625', short: '625 ml', name: 'Agua Premium 625 ml', h: 215,
@@ -142,10 +143,11 @@
   function variants(p, hero) {
     const base = IMG + p.id + (hero ? '-hero' : '');
     const sizes = hero ? HERO_SIZES : p.sizes;
+    const ver = hero ? '' : IMG_V;   // la del hero va igual que en el preload del HTML
     return {
-      src: `${base}-${sizes[0]}.webp`,
-      srcset: sizes.map(w => `${base}-${w}.webp ${w}w`).join(', '),
-      big: `${base}-${sizes[sizes.length - 1]}.webp`
+      src: `${base}-${sizes[0]}.webp${ver}`,
+      srcset: sizes.map(w => `${base}-${w}.webp${ver} ${w}w`).join(', '),
+      big: `${base}-${sizes[sizes.length - 1]}.webp${ver}`
     };
   }
 
