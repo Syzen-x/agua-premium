@@ -11,8 +11,17 @@
 !/assets/img/productos/
 !/assets/img/botellas-linea.jpg
 !/assets/img/hielo-escena.webp
+!/assets/img/hielo-escena-800.webp
+!/assets/img/planta-hielo-600.webp
 !/assets/img/planta-hielo.jpg
 !/assets/img/planta-hielo.webp
 /assets/img/productos/*-original.webp
 /assets/img/productos/agua-625-v1*.webp
+# tamaño completo: la web usa las variantes -NNN.webp (1x y 2x)
+/assets/img/productos/agua-625.webp
+/assets/img/productos/agua-625-hero.webp
+/assets/img/productos/agua-1l.webp
+/assets/img/productos/agua-galon.webp
+/assets/img/productos/agua-20l.webp
+/assets/img/productos/hielo-2kg.webp
 !/.nojekyll

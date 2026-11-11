@@ -6,40 +6,171 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
+  /* ══════════════════════════════════════════════════════════════
+     DATOS DEL NEGOCIO — se completan aquí, en un solo lugar.
+     Lo que quede vacío ('' o null) NO se muestra en la página.
+     PENDIENTE: todos estos datos los entrega el dueño.
+     ══════════════════════════════════════════════════════════════ */
+  const NEGOCIO = {
+    // Precio por unidad en dólares, como número con punto decimal. null = sin precio visible.
+    precios: {
+      'agua-625': null,
+      'agua-1l': null,
+      'agua-galon': null,
+      'agua-20l': null,
+      'hielo-2kg': null
+    },
+    horario: '',            // horario de atención y de reparto, en una frase
+    pedidoMinimo: '',       // pedido mínimo, en una frase
+    envio: '',              // costo de envío por ciudad, en una frase
+    registroSanitario: '',  // número de registro sanitario ARCSA / norma INEN
+    direccion: '',          // dirección exacta de la planta
+    mapsUrl: '',            // enlace de Google Maps de la planta
+    correo: '',
+    redes: { facebook: '', instagram: '', tiktok: '' },   // enlaces completos (https://…)
+    appUrl: '',             // enlace público de la app de pedidos
+    ecoflex: ''             // qué es la botella ECOFLEX, en una frase (sale en la ficha de 625 ml)
+  };
+
+  /* Analítica: GoatCounter (ligero, sin cookies). PENDIENTE: crear la cuenta en goatcounter.com
+     y escribir aquí el código del sitio (la parte de "CODIGO.goatcounter.com"). Vacío = no se carga nada. */
+  const ANALITICA = { goatcounter: '' };
+
+  /* ══════════════════════════════════════════════════════════════
+     CRONOGRAMA SEMANAL DE RUTAS — único lugar donde se edita.
+     De aquí leen: Cobertura, el pedido (hero y panel), Negocios y el pie.
+     (El JSON-LD de index.html repite los días: actualízalo también.)
+     ══════════════════════════════════════════════════════════════ */
+  const ZONAS = {
+    lago: { name: 'Lago Agrio', alias: 'Nueva Loja · planta', city: 'Lago Agrio (Nueva Loja)', roads: [] },
+    shushufindi: { name: 'Shushufindi', alias: '', city: 'Shushufindi', roads: ['shushufindi'] },
+    sacha: { name: 'Sacha', alias: 'Joya de los Sachas', city: 'Sacha', roads: ['sacha'] },
+    coca: { name: 'Coca', alias: 'Francisco de Orellana', city: 'Coca', roads: ['sacha', 'coca'] },
+    loreto: { name: 'Loreto', alias: '', city: 'Loreto', roads: ['sacha', 'coca', 'loreto'] },
+    viaquito: { name: 'Vía Quito – El Amazonas', alias: '', city: 'Vía Quito – El Amazonas', roads: [] }
+  };
+  const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const RUTAS = [
+    /* domingo   */ [],
+    /* lunes     */ ['coca'],
+    /* martes    */ ['lago'],
+    /* miércoles */ ['shushufindi'],
+    /* jueves    */ ['sacha'],
+    /* viernes   */ ['lago'],
+    /* sábado    */ ['viaquito', 'lago']
+  ];
+  const SEMANA = [1, 2, 3, 4, 5, 6, 0];   // orden en que se lee la semana: de lunes a domingo
+  const lista = (a) => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' y ' + a[a.length - 1];
+  const mayus = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const diasDe = (key) => SEMANA.filter(d => RUTAS[d].includes(key));
+  const diasTexto = (key) => lista(diasDe(key).map(d => DIAS[d]));
+  function rutaTexto(key) {
+    const d = diasDe(key);
+    if (!d.length) return '';
+    return d.length === 1 ? `ruta del ${DIAS[d[0]]}` : `rutas de ${lista(d.map(i => DIAS[i]))}`;
+  }
+  // próxima ruta a una zona, contada desde la fecha del visitante
+  function proximoTexto(key, now) {
+    const hoy = (now || new Date()).getDay();
+    for (let o = 0; o < 7; o++) {
+      const d = (hoy + o) % 7;
+      if (!RUTAS[d].includes(key)) continue;
+      if (o === 0) return `Próximo reparto: hoy, ${DIAS[d]}. Confirma por WhatsApp si tu pedido alcanza a salir.`;
+      if (o === 1) return `Próximo reparto: mañana, ${DIAS[d]}.`;
+      return `Próximo reparto: ${SEMANA.indexOf(d) > SEMANA.indexOf(hoy) ? 'este' : 'el próximo'} ${DIAS[d]}.`;
+    }
+    return 'Consulta el día de reparto por WhatsApp.';
+  }
+  function cityLine(key) {
+    const z = ZONAS[key];
+    if (!z) return '';
+    const d = diasTexto(key);
+    return d ? `Reparto a ${z.name}: ${d}.` : `${z.name}: consulta el día de reparto por WhatsApp.`;
+  }
+
   /* ── catálogo (solo datos confirmados por la marca) ── */
+  const IMG = 'assets/img/productos/';
   const PRODUCTS = [
     {
       id: 'agua-625', short: '625 ml', name: 'Agua Premium 625 ml', h: 215,
       desc: 'En botella ECOFLEX: más resistente, más ligera y 100% reciclable. Agua purificada y envasada sin gas.',
       facts: ['Botella ECOFLEX', '100% reciclable', 'Sin gas'],
-      img: 'assets/img/productos/agua-625.webp', iw: 540, ih: 1980
+      sizes: [80, 160], iw: 540, ih: 1980
     },
     {
       id: 'agua-1l', short: '1 litro', name: 'Agua Premium 1 litro', h: 285,
       desc: 'Agua purificada y envasada sin gas, para la mesa, el trabajo o la jornada completa.',
       facts: ['1 litro', 'Sin gas'],
-      img: 'assets/img/productos/agua-1l.webp', iw: 534, ih: 1772
+      sizes: [120, 320], iw: 534, ih: 1772
     },
     {
       id: 'agua-galon', short: 'Galón', name: 'Agua Premium galón', h: 300,
       desc: 'Agua purificada en galón, para la cocina y el consumo diario de la casa.',
       facts: ['Galón', 'Para la casa'],
-      img: 'assets/img/productos/agua-galon.webp', iw: 704, ih: 1422
+      sizes: [200, 400], iw: 704, ih: 1422
     },
     {
       id: 'agua-20l', short: 'Garrafón 20 L', name: 'Garrafón Agua Premium 20 L', h: 490,
       desc: 'Para el dispensador de la casa, la oficina o el negocio.',
       facts: ['20 litros', 'Para dispensador'],
-      img: 'assets/img/productos/agua-20l.webp', iw: 874, ih: 1522
+      sizes: [280, 560], iw: 874, ih: 1522
     },
     {
       id: 'hielo-2kg', short: 'Hielo 2 kg', name: 'Ice Fresh Premium 2 kg', h: 330,
       desc: 'Hielo 100% purificado en cubitos cristalinos. Funda de 2 kg con agarradera.',
       facts: ['Hielo 100% purificado', 'Funda con agarradera', 'Cubitos cristalinos'],
-      img: 'assets/img/productos/hielo-2kg.webp', iw: 1010, ih: 1498
+      sizes: [220, 500], iw: 1010, ih: 1498
     }
   ];
   const byId = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
+  const HERO_ID = 'agua-625';
+  const HERO_SIZES = [200, 300, 400];
+  // variantes de una imagen: 1x y 2x del tamaño mostrado
+  function variants(p, hero) {
+    const base = IMG + p.id + (hero ? '-hero' : '');
+    const sizes = hero ? HERO_SIZES : p.sizes;
+    return {
+      src: `${base}-${sizes[0]}.webp`,
+      srcset: sizes.map(w => `${base}-${w}.webp ${w}w`).join(', '),
+      big: `${base}-${sizes[sizes.length - 1]}.webp`
+    };
+  }
+
+  /* ── precios ── */
+  const money = (n) => '$' + n.toFixed(2);
+  const priceOf = (id) => { const v = NEGOCIO.precios[id]; return typeof v === 'number' && v > 0 ? v : null; };
+  // total solo si todos los productos del pedido tienen precio
+  function totalOf(items) {
+    if (!items.length) return null;
+    let t = 0;
+    for (const [id, q] of items) { const p = priceOf(id); if (p === null) return null; t += p * q; }
+    return t;
+  }
+
+  /* ── analítica: cada salida a WhatsApp, con la sección de origen ── */
+  if (ANALITICA.goatcounter) {
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://gc.zgo.at/count.js';
+    s.dataset.goatcounter = `https://${ANALITICA.goatcounter}.goatcounter.com/count`;
+    document.head.appendChild(s);
+  }
+  function sectionOf(el) {
+    if (!el) return 'pagina';
+    if (el.closest('.drawer')) return 'pedido';
+    if (el.closest('.orderbar')) return 'barra-pedido';
+    if (el.closest('footer')) return 'pie';
+    const s = el.closest('section[id]');
+    return s ? s.id : 'pagina';
+  }
+  function track(section) {
+    const gc = window.goatcounter;
+    if (gc && gc.count) gc.count({ path: `whatsapp-${section}`, title: `WhatsApp desde ${section}`, event: true });
+  }
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href*="wa.me"]');
+    if (a) track(sectionOf(a));
+  });
 
   /* ── estado del pedido ── */
   const order = load();
@@ -59,15 +190,23 @@
     save(); renderOrder(false);
   }
   function waURL(text) { return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`; }
-  function orderText(city, address, extra) {
+  function orderText(cityKey, address, extra) {
     const lines = ['Hola Premium Distribuciones, quiero hacer un pedido:'];
-    const items = extra || Object.entries(order).map(([id, q]) => [id, q]);
-    items.forEach(([id, q]) => lines.push(`• ${q} × ${byId[id].name}`));
-    if (city) lines.push('', `Ciudad: ${city}`);
+    const items = (extra || Object.entries(order)).filter(([id]) => byId[id]);
+    items.forEach(([id, q]) => {
+      const p = priceOf(id);
+      lines.push(`• ${q} × ${byId[id].name}${p !== null ? ` (${money(p * q)})` : ''}`);
+    });
+    const total = totalOf(items);
+    if (total !== null) lines.push(`Total: ${money(total)}`);
+    if (cityKey && ZONAS[cityKey]) {
+      const ruta = rutaTexto(cityKey);
+      lines.push('', `Ciudad: ${ZONAS[cityKey].city}${ruta ? `, ${ruta}` : ''}`);
+    }
     if (address) lines.push(`Dirección: ${address}`);
     return lines.join('\n');
   }
-  function openWA(text) { window.open(waURL(text), '_blank', 'noopener'); }
+  function openWA(text, section) { track(section); window.open(waURL(text), '_blank', 'noopener'); }
 
   /* ── stepper reutilizable ── */
   function stepper(root, initial, onChange) {
@@ -79,23 +218,88 @@
     return { get: () => v, set };
   }
 
+  /* ── ciudad del pedido: la misma en el hero, en el panel y en Cobertura ── */
+  const quickCity = $('[data-quick-city]');
+  const drawerCity = $('[data-drawer-city]');
+  const cityOptions = Object.entries(ZONAS).map(([k, z]) => `<option value="${k}">${z.city}</option>`).join('');
+  quickCity.insertAdjacentHTML('beforeend', cityOptions);
+  drawerCity.innerHTML = cityOptions;
+  function renderCityRoutes() {
+    $$('[data-city-route]').forEach(el => {
+      const sel = $('select[name="ciudad"]', el.closest('form'));
+      const text = cityLine(sel.value);
+      el.textContent = text;
+      el.hidden = !text;
+    });
+  }
+  function setCity(key, keepQuick) {
+    if (!ZONAS[key]) return;
+    drawerCity.value = key;
+    if (!keepQuick) quickCity.value = key;
+    renderCityRoutes();
+  }
+  quickCity.addEventListener('change', () => { if (quickCity.value) setCity(quickCity.value); else renderCityRoutes(); });
+  drawerCity.addEventListener('change', () => setCity(drawerCity.value));
+
   /* ── pedido rápido (hero) ── */
   const chipsRoot = $('[data-quick-chips]');
-  chipsRoot.innerHTML = PRODUCTS.map((p, i) => `
-    <label class="chip"><input type="radio" name="quick-product" value="${p.id}" ${i === 3 ? 'checked' : ''}><span>${p.short}</span></label>`).join('');
+  chipsRoot.innerHTML = PRODUCTS.map(p => `
+    <label class="chip"><input type="radio" name="quick-product" value="${p.id}" ${p.id === HERO_ID ? 'checked' : ''}><span>${p.short}</span></label>`).join('');
   const quickStep = stepper($('[data-quick] [data-stepper]'), 1);
   $('[data-quick]').addEventListener('submit', (e) => {
     e.preventDefault();
     const id = $('input[name="quick-product"]:checked').value;
-    openWA(orderText('', '', [[id, quickStep.get()]]));
+    openWA(orderText(quickCity.value, '', [[id, quickStep.get()]]), 'inicio');
   });
+
+  /* ── la imagen del hero sigue al producto elegido ── */
+  const heroFig = $('.hero__bottle');
+  const heroImg = $('[data-hero-img]');
+  const heroRef = $('[data-hero-reflect]');
+  const heroSheen = $('.bottle__sheen');
+  const heroTilt = $('[data-bottle-tilt]');
+  const HERO_ALT = heroImg.alt;
+  let heroShown = HERO_ID;
+  function heroShow(id) {
+    if (id === heroShown || !byId[id]) return;
+    heroShown = id;
+    const p = byId[id], isHero = id === HERO_ID, v = variants(p, isHero), ar = p.iw / p.ih;
+    const sizes = isHero ? '(max-width: 820px) 84px, 200px' : `(max-width: 820px) 28vw, ${Math.round(600 * ar)}px`;
+    const swap = () => {
+      heroFig.style.setProperty('--ar', ar.toFixed(4));
+      heroFig.classList.toggle('is-wide', ar > 0.45);
+      [heroImg, heroRef].forEach(im => { im.width = p.iw; im.height = p.ih; im.sizes = sizes; im.srcset = v.srcset; im.src = v.src; });
+      heroImg.alt = isHero ? HERO_ALT : p.name;
+      const mask = `url("${isHero ? IMG + 'agua-625-160.webp' : v.big}")`;
+      heroSheen.style.webkitMaskImage = mask;
+      heroSheen.style.maskImage = mask;
+    };
+    const gsap = window.gsap;
+    if (!gsap || reduce) { swap(); return; }
+    gsap.to(heroTilt, {
+      opacity: 0, duration: 0.16, ease: 'power1.in', overwrite: 'auto',
+      onComplete() {
+        swap();
+        const show = () => {
+          if (heroShown !== id) return;
+          gsap.to(heroTilt, { opacity: 1, duration: 0.45, ease: 'power2.out', overwrite: 'auto' });
+          rippleAtBottle();
+        };
+        (heroImg.decode ? heroImg.decode().catch(() => {}) : Promise.resolve()).then(show);
+      }
+    });
+  }
+  chipsRoot.addEventListener('change', (e) => { if (e.target.name === 'quick-product') heroShow(e.target.value); });
 
   /* ── la línea de productos ── */
   const lineup = $('[data-lineup]');
-  lineup.innerHTML = PRODUCTS.map((p, i) => `
+  lineup.innerHTML = PRODUCTS.map((p, i) => {
+    const v = variants(p), r = p.h / 500 * p.iw / p.ih;   // ancho mostrado por cada px de escala
+    return `
     <button class="item" type="button" role="radio" aria-checked="${i === 0}" tabindex="${i === 0 ? 0 : -1}" data-id="${p.id}" style="--h:${p.h}" aria-label="${p.name}">
-      <span class="item__label">${p.short}</span><img src="${p.img}" alt="" width="${p.iw}" height="${p.ih}" decoding="async">
-    </button>`).join('');
+      <span class="item__label">${p.short}</span><img src="${v.src}" srcset="${v.srcset}" sizes="(max-width: 820px) ${Math.round(320 * r)}px, ${Math.round(470 * r)}px" alt="${p.name}" width="${p.iw}" height="${p.ih}" loading="lazy" decoding="async">
+    </button>`;
+  }).join('');
   const items = $$('.item', lineup);
   const spec = $('[data-spec]');
   const specStep = stepper($('[data-spec-stepper]'), 1);
@@ -106,6 +310,12 @@
     const p = byId[id];
     $('[data-spec-name]').textContent = p.name;
     $('[data-spec-desc]').textContent = p.desc;
+    const price = priceOf(id), priceEl = $('[data-spec-price]');
+    priceEl.textContent = price !== null ? `${money(price)} por unidad` : '';
+    priceEl.hidden = price === null;
+    const note = id === 'agua-625' ? NEGOCIO.ecoflex.trim() : '', noteEl = $('[data-spec-note]');
+    noteEl.textContent = note;
+    noteEl.hidden = !note;
     $('[data-spec-facts]').innerHTML = p.facts.map(f => `<li>${f}</li>`).join('');
     $('[data-spec-add]').textContent = `Agregar ${p.short} al pedido`;
     specStep.set(1);
@@ -131,21 +341,31 @@
   const list = $('[data-drawer-items]');
   function renderOrder(bump) {
     const n = count();
+    const entries = Object.entries(order).filter(([id]) => byId[id]);
+    const total = totalOf(entries);
     countEl.hidden = n === 0;
     countEl.textContent = n;
     if (bump && n) { countEl.classList.remove('is-bump'); void countEl.offsetWidth; countEl.classList.add('is-bump'); }
     bar.hidden = n === 0;
-    const kinds = Object.keys(order).length;
-    $('[data-orderbar-text]').textContent = n ? `${n} ${n === 1 ? 'producto' : 'productos'} en tu pedido${kinds > 1 ? ` (${kinds} tipos)` : ''}` : 'Tu pedido';
+    const kinds = entries.length;
+    $('[data-orderbar-text]').textContent = n
+      ? `${n} ${n === 1 ? 'producto' : 'productos'} en tu pedido${total !== null ? `: ${money(total)}` : kinds > 1 ? ` (${kinds} tipos)` : ''}`
+      : 'Tu pedido';
     $('[data-orderbar-send]').href = waURL(orderText('', ''));
     drawer.classList.toggle('is-empty', n === 0);
     $('[data-drawer-empty]').hidden = n !== 0;
-    list.innerHTML = Object.entries(order).map(([id, q]) => `
-      <li data-line="${id}"><span>${byId[id].name}</span>
+    list.innerHTML = entries.map(([id, q]) => {
+      const p = priceOf(id);
+      return `
+      <li data-line="${id}"><span>${byId[id].name}${p !== null ? `<small>${money(p)} c/u, ${money(p * q)}</small>` : ''}</span>
         <div class="stepper"><button type="button" data-d="-1" aria-label="Quitar uno de ${byId[id].name}"><svg aria-hidden="true"><use href="#i-minus"/></svg></button>
         <output aria-live="polite">${q}</output>
         <button type="button" data-d="1" aria-label="Agregar uno de ${byId[id].name}"><svg aria-hidden="true"><use href="#i-plus"/></svg></button></div>
-      </li>`).join('');
+      </li>`;
+    }).join('');
+    const totalEl = $('[data-drawer-total]');
+    totalEl.hidden = total === null;
+    $('[data-v]', totalEl).textContent = total !== null ? money(total) : '';
   }
   list.addEventListener('click', (e) => {
     const b = e.target.closest('[data-d]'); if (!b) return;
@@ -183,7 +403,7 @@
     e.preventDefault();
     if (!count()) return;
     const fd = new FormData(e.target);
-    openWA(orderText(fd.get('ciudad'), (fd.get('direccion') || '').trim()));
+    openWA(orderText(fd.get('ciudad'), (fd.get('direccion') || '').trim()), 'pedido');
   });
   renderOrder(false);
   // la barra flotante no tapa el pedido rápido del inicio
@@ -212,7 +432,7 @@
       `Ciudad: ${fd.get('ciudad')}`,
       `Me interesa: ${prods.map(id => byId[id].name).join(', ')}`
     ].join('\n');
-    openWA(text);
+    openWA(text, 'negocios');
   });
   supply.querySelector('[name="negocio"]').addEventListener('input', (e) => {
     if (e.target.value.trim()) e.target.closest('.field').classList.remove('has-error');
@@ -220,29 +440,60 @@
   $('[data-supply-products]').addEventListener('change', () => {
     if (supply.querySelectorAll('[name="productos"]:checked').length) $('[data-supply-products]').closest('.field').classList.remove('has-error');
   });
+  // Negocios: las ciudades con ruta fija salen del cronograma
+  const fixed = Object.keys(ZONAS).filter(k => diasDe(k).length).map(k => ZONAS[k].name);
+  const fixedEl = $('[data-rutas-ciudades]');
+  if (fixedEl && fixed.length) fixedEl.textContent = ` a ${lista(fixed)}`;
 
   /* ── mapa de cobertura ── */
-  const TOWNS = {
-    lago: { name: 'Lago Agrio', city: 'Lago Agrio (Nueva Loja)', roads: [] },
-    shushufindi: { name: 'Shushufindi', city: 'Shushufindi', roads: ['shushufindi'] },
-    sacha: { name: 'Sacha', city: 'Sacha', roads: ['sacha'] },
-    coca: { name: 'Coca', city: 'Coca', roads: ['sacha', 'coca'] },
-    loreto: { name: 'Loreto', city: 'Loreto', roads: ['sacha', 'coca', 'loreto'] }
-  };
+  $('[data-towns]').innerHTML = Object.entries(ZONAS).map(([k, z]) => `
+    <li><button type="button" data-town="${k}" aria-pressed="false">
+      <span class="towns__name">${z.name}${z.alias ? `<small>${z.alias}</small>` : ''}</span>
+      <span class="towns__days">${diasTexto(k) || 'día por confirmar'}</span>
+    </button></li>`).join('');
   const cta = $('[data-town-cta]');
-  function pickTown(key) {
-    const t = TOWNS[key];
+  function pickTown(key, initial) {
+    const t = ZONAS[key];
     $$('[data-town]').forEach(b => b.setAttribute('aria-pressed', b.dataset.town === key));
     $$('[data-town-dot]').forEach(g => g.classList.toggle('is-on', g.dataset.townDot === key));
     $$('[data-road]').forEach(p => p.classList.toggle('is-on', t.roads.includes(p.dataset.road)));
     $('[data-town-cta-label]').textContent = `Pedir en ${t.name}`;
+    $('[data-town-next]').textContent = proximoTexto(key);
     cta.href = waURL(`Hola Premium Distribuciones, quiero hacer un pedido en ${t.city}.`);
-    const sel = $('[data-drawer-city]');
-    Array.from(sel.options).forEach(o => { if (o.value === t.city) sel.value = o.value; });
+    setCity(key, initial);
   }
   $$('[data-town]').forEach(b => b.addEventListener('click', () => pickTown(b.dataset.town)));
   $$('[data-town-dot]').forEach(g => g.addEventListener('click', () => pickTown(g.dataset.townDot)));
-  pickTown('lago');
+  pickTown('lago', true);
+
+  /* ── pie: la semana completa, compacta ── */
+  $('[data-week]').innerHTML = SEMANA.map(d => `
+    <li><b>${mayus(DIAS[d])}</b> ${RUTAS[d].length ? lista(RUTAS[d].map(k => ZONAS[k].name)) : 'sin ruta'}</li>`).join('');
+
+  /* ── datos del negocio: se muestra solo lo que esté completo ── */
+  (function biz() {
+    const N = NEGOCIO;
+    $$('[data-biz]').forEach(el => {
+      const key = el.dataset.biz, v = String(N[key] || '').trim(), t = $('[data-v]', el);
+      if (!v || !t) return;
+      if (key === 'mapsUrl') t.href = v;
+      else if (key === 'correo') { t.href = `mailto:${v}`; t.textContent = v; }
+      else t.textContent = v;
+      el.hidden = false;
+    });
+    $$('[data-biz-link]').forEach(a => {
+      const v = String(N.redes[a.dataset.bizLink] || '').trim();
+      if (v) { a.href = v; a.hidden = false; }
+    });
+    $$('[data-biz-group]').forEach(g => { g.hidden = !$$('[data-biz], [data-biz-link]', g).some(el => !el.hidden); });
+    // con enlace público, la app es el botón principal y WhatsApp queda como alternativa
+    const appUrl = N.appUrl.trim(), appOpen = $('[data-app-open]'), appWa = $('[data-app-wa]');
+    if (appUrl && appOpen) {
+      appOpen.href = appUrl;
+      appOpen.hidden = false;
+      appWa.classList.replace('btn--light', 'btn--ghost');
+    }
+  })();
 
   /* ── barra superior ── */
   const head = $('[data-bar]');
@@ -261,16 +512,41 @@
   }
   const year = $('[data-year]'); if (year) year.textContent = new Date().getFullYear();
 
-  /* ── campo de tapas + movimiento ── */
+  /* ── menú en móvil ── */
+  const menuBtn = $('[data-menu-btn]');
+  const menu = $('#menu');
+  const menuIcon = $('[data-menu-icon]');
+  function setMenu(open) {
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+    menuIcon.setAttribute('href', open ? '#i-close' : '#i-menu');
+    menu.classList.toggle('is-open', open);
+    head.classList.toggle('is-menu', open);
+  }
+  const menuOpen = () => menuBtn.getAttribute('aria-expanded') === 'true';
+  menuBtn.addEventListener('click', () => setMenu(!menuOpen()));
+  menu.addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menuOpen()) { setMenu(false); menuBtn.focus(); } });
+  document.addEventListener('click', (e) => { if (menuOpen() && !e.target.closest('#menu, [data-menu-btn]')) setMenu(false); });
+  $$('[data-open-order]').forEach(b => b.addEventListener('click', () => setMenu(false)));
+
+  /* ── agua del fondo + movimiento ── */
   const field = window.WaterField ? new window.WaterField($('[data-water]')) : null;
   field && field.start();
   // la botella "toca" el agua: una onda nace en su base
   function rippleAtBottle() {
-    const img = $('.hero__bottle img');
-    if (!field || !img) return;
-    const r = img.getBoundingClientRect();
+    if (!field || !heroImg) return;
+    const r = heroImg.getBoundingClientRect();
     if (r.bottom < 0 || r.top > window.innerHeight) return;
     field.rippleAtClient(r.left + r.width / 2, r.bottom - r.height * 0.02);
+  }
+
+  function loadScript(src) {
+    return new Promise((ok, fail) => {
+      const s = document.createElement('script');
+      s.src = src; s.async = true; s.onload = ok; s.onerror = fail;
+      document.head.appendChild(s);
+    });
   }
 
   function motion() {
@@ -283,22 +559,28 @@
     gsap.registerPlugin(ST);
     document.documentElement.classList.add('js-motion');
 
-    // Lenis: desplazamiento suave en escritorio
-    if (window.Lenis) {
-      const lenis = new window.Lenis({ duration: 1.1, easing: t => 1 - Math.pow(1 - t, 4) });
-      window.__lenis = lenis;
-      lenis.on('scroll', (e) => { ST.update(); field && field.nudge(e.velocity * 40); });
-      gsap.ticker.add((t) => lenis.raf(t * 1000));
-      gsap.ticker.lagSmoothing(0);
-      $$('a[href^="#"]').forEach(a => a.addEventListener('click', (e) => {
-        const id = a.getAttribute('href'); if (id.length < 2) return;
-        const el = document.querySelector(id); if (!el) return;
-        e.preventDefault(); lenis.scrollTo(el, { offset: -72 });
-        if (!drawer.hidden) closeDrawer();
-      }));
-    } else {
-      let lastY = window.scrollY;
-      window.addEventListener('scroll', () => { const y = window.scrollY; field && field.nudge((y - lastY) * 40); lastY = y; }, { passive: true });
+    // el agua del fondo reacciona al desplazamiento
+    let lastY = window.scrollY;
+    window.addEventListener('scroll', () => { const y = window.scrollY; field && field.nudge((y - lastY) * 40); lastY = y; }, { passive: true });
+
+    // Lenis: desplazamiento suave solo con ratón o trackpad. En pantallas táctiles no se descarga.
+    const touch = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    if (!touch) {
+      loadScript('https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js').then(() => {
+        if (!window.Lenis) return;
+        const lenis = new window.Lenis({ duration: 1.1, easing: t => 1 - Math.pow(1 - t, 4) });
+        window.__lenis = lenis;
+        lenis.on('scroll', () => ST.update());
+        gsap.ticker.add((t) => lenis.raf(t * 1000));
+        gsap.ticker.lagSmoothing(0);
+        if (!drawer.hidden) lenis.stop();
+        $$('a[href^="#"]').forEach(a => a.addEventListener('click', (e) => {
+          const id = a.getAttribute('href'); if (id.length < 2) return;
+          const el = document.querySelector(id); if (!el) return;
+          e.preventDefault(); lenis.scrollTo(el, { offset: -72 });
+          if (!drawer.hidden) closeDrawer();
+        }));
+      }).catch(() => { /* sin Lenis: desplazamiento nativo */ });
     }
 
     // el momento de carga: el titular sube desde la línea y cae una gota
@@ -345,12 +627,11 @@
     gsap.to('[data-bottle-par]', { yPercent: 8, rotation: 4, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
 
     // la botella sigue al puntero con una inclinación suave, como si flotara
-    const tilt = $('[data-bottle-tilt]');
-    if (tilt && window.matchMedia('(pointer: fine)').matches) {
-      gsap.set(tilt, { transformPerspective: 900 });
-      const ry = gsap.quickTo(tilt, 'rotationY', { duration: 1.1, ease: 'power3.out' });
-      const rx = gsap.quickTo(tilt, 'rotationX', { duration: 1.1, ease: 'power3.out' });
-      const tx = gsap.quickTo(tilt, 'x', { duration: 1.4, ease: 'power3.out' });
+    if (heroTilt && window.matchMedia('(pointer: fine)').matches) {
+      gsap.set(heroTilt, { transformPerspective: 900 });
+      const ry = gsap.quickTo(heroTilt, 'rotationY', { duration: 1.1, ease: 'power3.out' });
+      const rx = gsap.quickTo(heroTilt, 'rotationX', { duration: 1.1, ease: 'power3.out' });
+      const tx = gsap.quickTo(heroTilt, 'x', { duration: 1.4, ease: 'power3.out' });
       $('.hero').addEventListener('pointermove', (e) => {
         const nx = e.clientX / window.innerWidth - 0.5, ny = e.clientY / window.innerHeight - 0.5;
         ry(nx * 16); rx(-ny * 8); tx(nx * 18);
