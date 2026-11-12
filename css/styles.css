@@ -114,10 +114,10 @@ html { scrollbar-color: var(--acero) var(--agua); }
   transition: background-color .4s, box-shadow .4s, padding .4s var(--ease-liquid);
 }
 .bar.is-solid { background: rgba(232, 240, 241, .9); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); box-shadow: 0 1px 0 rgba(94,116,121,.25); padding-block: .6rem; }
-.brand { display: inline-flex; align-items: center; gap: .65rem; text-decoration: none; margin-right: auto; }
-.brand__drop { width: 1.6rem; height: 2.1rem; color: var(--tapa); --leaf: var(--agua); }
-.brand__name { font-family: var(--display); font-weight: 500; font-size: 1.02rem; letter-spacing: -0.01em; line-height: 1; }
-.brand__name span { font-weight: 300; }
+/* el logo va en una placa verde, como en la etiqueta de la botella */
+.brand { display: inline-flex; align-items: center; min-height: 2.9rem; padding: .45rem .8rem; border-radius: 14px; background: var(--tapa); color: var(--blanco); text-decoration: none; margin-right: auto; box-shadow: 0 8px 18px -12px rgba(11,61,34,.6); }
+.brand__logo { display: block; height: 2.3rem; width: auto; aspect-ratio: 302.7 / 100; }
+@media (max-width: 820px) { .brand__logo { height: 2rem; } }
 .bar__nav { display: flex; gap: .4rem; }
 .bar__nav a { padding: .5rem .85rem; border-radius: var(--radius-pill); text-decoration: none; font-weight: 500; font-size: var(--fs-1); transition: background-color .25s, color .25s; }
 .bar__nav a:hover { background: rgba(255,255,255,.7); }
@@ -394,7 +394,7 @@ html { scrollbar-color: var(--acero) var(--agua); }
 /* ── footer ──────────────────────────────── */
 .foot { background: var(--botella); color: #BFE3CB; padding: clamp(3.5rem, 7vw, 6rem) 0 6.5rem; }
 .foot__grid { display: grid; grid-template-columns: 1.25fr 1fr 1.35fr 1fr .9fr; gap: 2.5rem 2rem; }
-.foot__drop { width: 2.6rem; height: 3.4rem; color: var(--tapa-hi); --leaf: var(--botella); }
+.foot__logo { display: block; height: 6rem; width: auto; aspect-ratio: 109 / 100; color: var(--blanco); }
 .foot__name { margin-top: 1rem; font-family: var(--display); font-weight: 500; font-size: var(--fs-3); color: var(--blanco); }
 .foot__tag { margin-top: .3rem; }
 .foot__h { font-family: var(--body); font-weight: 700; font-size: var(--fs-1); letter-spacing: 0; color: var(--blanco); margin-bottom: .7rem; }
@@ -498,7 +498,6 @@ html { scrollbar-color: var(--acero) var(--agua); }
 }
 
 @media (max-width: 420px) {
-  .brand__name span { display: none; }
   .chip span { padding: .5rem .85rem; font-size: .94rem; }
   .quick { padding: .85rem; border-radius: 24px; }
   .orderbar { width: calc(100% - 1.5rem); justify-content: space-between; }
