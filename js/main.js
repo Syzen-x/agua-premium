@@ -681,7 +681,9 @@
     return {
       state: st,
       size,
-      run(v) { if (v === on) return; on = v; if (on) { size(); raf = requestAnimationFrame(draw); } else cancelAnimationFrame(raf); }
+      run(v) { if (v === on) return; on = v; if (on) { size(); raf = requestAnimationFrame(draw); } else cancelAnimationFrame(raf); },
+      // un solo cuadro quieto (para quien pidió menos movimiento)
+      frame() { if (on) return; size(); draw(8000); }
     };
   }
 
@@ -693,15 +695,83 @@
     });
   }
 
+  /* ── Proceso: la gota baja por el tubo y la botella del marco se aclara etapa por etapa.
+     Si el equipo pide menos movimiento (en Windows: "Efectos de animación" apagados), la historia
+     se sigue contando, pero sin nada que flote ni se desplace: cada etapa cambia la botella de golpe. */
+  function processStory(gsap, ST) {
+    const steps = $$('.step');
+    const nodes = $$('[data-pipe-nodes] circle');
+    const drop = $('[data-pipe-drop]');
+    const flow = $('[data-pipe-flow]');
+    const nodeY = nodes.map(c => Number(c.getAttribute('cy')));
+
+    const stage = $('[data-stage]');
+    const stageCap = $('[data-stage-cap]');
+    const murkEl = $('[data-stage-murk]');
+    const water = murkEl && murkEl.getContext ? stageWater(murkEl, $('[data-stage-tint]')) : null;
+    const caustics = water && window.WaterField ? new window.WaterField($('[data-stage-caustics]')) : null;
+    const stageNames = steps.map(s => $('h3', s).textContent.trim());
+    const CLARITY = [0.06, 0.26, 0.44, 0.68, 0.93, 1, 1, 1];  // cuánto se ha aclarado al llegar a cada etapa
+    let stageNow = 0, stageSeen = false;
+    function setStage(n) {
+      if (!water || n === stageNow) return;
+      stageNow = n;
+      const last = n >= steps.length;
+      stageCap.hidden = false;
+      stageCap.textContent = last ? 'Agua purificada, lista' : `Etapa ${n} de ${steps.length - 1}: ${stageNames[n - 1]}`;
+      const to = { c: CLARITY[n - 1], uv: n === 6 ? 1 : 0, oz: n === 7 ? 1 : 0 };
+      if (reduce) { Object.assign(water.state, to); water.frame(); return; }
+      gsap.to(water.state, { ...to, duration: 1.1, ease: 'power2.out', overwrite: true });
+      // al terminar, una onda recorre el agua ya limpia
+      if (last && caustics && caustics.ok) caustics.ripple(caustics.w / 2, caustics.h * 0.62);
+    }
+    if (water && 'IntersectionObserver' in window) {
+      new IntersectionObserver(([en]) => {
+        stageSeen = en.isIntersecting;
+        if (reduce) { if (stageSeen) water.frame(); }
+        else water.run(stageSeen);
+        if (stageSeen && caustics) { caustics.resize(); caustics.start(); }
+      }).observe(stage);
+      window.addEventListener('resize', () => { water.size(); if (reduce) water.frame(); }, { passive: true });
+      setStage(1);
+      caustics && caustics.resize();
+    }
+    gsap.set(flow, { scaleY: 0 });
+    ST.create({
+      trigger: '.process__copy .steps',
+      start: 'top 65%',
+      end: 'bottom 80%',
+      scrub: reduce ? true : 0.6,
+      onUpdate(self) {
+        const p = self.progress;
+        const y = 20 + p * 580;
+        gsap.set(drop, { y });
+        gsap.set(flow, { scaleY: p });
+        const tint = gsap.utils.interpolate('#9FB3B8', '#1F5FBF', p);
+        drop.querySelector('path').style.fill = tint;
+        const active = nodeY.filter(n => y + 6 >= n).length;
+        nodes.forEach((n, i) => n.classList.toggle('is-on', i < active));
+        steps.forEach((s, i) => s.classList.toggle('is-on', i < Math.max(1, active)));
+        setStage(Math.max(1, active));
+      }
+    });
+    // en móvil el tubo está oculto: cada paso se enciende al llegar
+    if (window.matchMedia('(max-width: 820px)').matches) {
+      steps.forEach(s => ST.create({ trigger: s, start: 'top 75%', onEnter: () => s.classList.add('is-on') }));
+    }
+  }
+
   function motion() {
     const gsap = window.gsap, ST = window.ScrollTrigger;
-    if (!gsap || reduce) {
+    if (!gsap || !ST) {
       $$('.pipe__nodes circle').forEach(c => c.classList.add('is-on'));
       $$('.step').forEach(s => s.classList.add('is-on'));
       return;
     }
     gsap.registerPlugin(ST);
     document.documentElement.classList.add('js-motion');
+    processStory(gsap, ST);
+    if (reduce) return;
 
     // el agua del fondo reacciona al desplazamiento
     let lastY = window.scrollY;
@@ -737,66 +807,6 @@
       .add(rippleAtBottle, 0.95);
     // si la pestaña no pinta o algo interrumpe la entrada, el contenido nunca se queda oculto
     setTimeout(() => { tl.kill(); gsap.set(heroBits, { clearProps: 'transform,opacity' }); }, 2400);
-
-    // la gota recorre el proceso, de gris acero a azul limpio
-    const steps = $$('.step');
-    const nodes = $$('[data-pipe-nodes] circle');
-    const drop = $('[data-pipe-drop]');
-    const flow = $('[data-pipe-flow]');
-    const nodeY = $$('[data-pipe-nodes] circle').map(c => Number(c.getAttribute('cy')));
-
-    // el marco cuenta el proceso con una botella: su agua se aclara etapa por etapa
-    const stage = $('[data-stage]');
-    const stageCap = $('[data-stage-cap]');
-    const murkEl = $('[data-stage-murk]');
-    const water = murkEl && murkEl.getContext ? stageWater(murkEl, $('[data-stage-tint]')) : null;
-    const caustics = water && window.WaterField ? new window.WaterField($('[data-stage-caustics]')) : null;
-    const stageNames = steps.map(s => $('h3', s).textContent.trim());
-    const CLARITY = [0.06, 0.26, 0.44, 0.68, 0.93, 1, 1, 1];  // cuánto se ha aclarado al llegar a cada etapa
-    let stageNow = 0, stageSeen = false;
-    function setStage(n) {
-      if (!water || n === stageNow) return;
-      stageNow = n;
-      const last = n >= steps.length;
-      stageCap.hidden = false;
-      stageCap.textContent = last ? 'Agua purificada, lista' : `Etapa ${n} de ${steps.length - 1}: ${stageNames[n - 1]}`;
-      gsap.to(water.state, { c: CLARITY[n - 1], uv: n === 6 ? 1 : 0, oz: n === 7 ? 1 : 0, duration: 1.1, ease: 'power2.out', overwrite: true });
-      // al terminar, una onda recorre el agua ya limpia
-      if (last && caustics && caustics.ok) caustics.ripple(caustics.w / 2, caustics.h * 0.62);
-    }
-    if (water && 'IntersectionObserver' in window) {
-      new IntersectionObserver(([en]) => {
-        stageSeen = en.isIntersecting;
-        water.run(stageSeen);
-        if (stageSeen && caustics) { caustics.resize(); caustics.start(); }
-      }).observe(stage);
-      window.addEventListener('resize', () => water.size(), { passive: true });
-      setStage(1);
-      caustics && caustics.resize();
-    }
-    gsap.set(flow, { scaleY: 0 });
-    ST.create({
-      trigger: '.process__copy .steps',
-      start: 'top 65%',
-      end: 'bottom 80%',
-      scrub: 0.6,
-      onUpdate(self) {
-        const p = self.progress;
-        const y = 20 + p * 580;
-        gsap.set(drop, { y });
-        gsap.set(flow, { scaleY: p });
-        const tint = gsap.utils.interpolate('#9FB3B8', '#1F5FBF', p);
-        drop.querySelector('path').style.fill = tint;
-        const active = nodeY.filter(n => y + 6 >= n).length;
-        nodes.forEach((n, i) => n.classList.toggle('is-on', i < active));
-        steps.forEach((s, i) => s.classList.toggle('is-on', i < Math.max(1, active)));
-        setStage(Math.max(1, active));
-      }
-    });
-    // en móvil el tubo está oculto: cada paso se enciende al llegar
-    if (window.matchMedia('(max-width: 820px)').matches) {
-      steps.forEach(s => ST.create({ trigger: s, start: 'top 75%', onEnter: () => s.classList.add('is-on') }));
-    }
 
     // las presentaciones llegan a la repisa, una tras otra
     // (nada queda oculto a la espera: el estado inicial se aplica recién al entrar en pantalla)
