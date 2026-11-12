@@ -34,17 +34,6 @@
     ecoflex: ''             // qué es la botella ECOFLEX, en una frase (sale en la ficha de 625 ml)
   };
 
-  /* Opiniones de clientes: SOLO reales y con permiso de quien la dio. Vacío = la sección no aparece.
-     Formato de cada una: { texto: '…', nombre: '…', negocio: '…', ciudad: '…' }  (negocio y ciudad son opcionales) */
-  const TESTIMONIOS = [
-  ];
-  // PENDIENTE: textos de MUESTRA para la maqueta (no son de clientes). Se reemplazan por opiniones reales.
-  const MUESTRAS = [
-    { texto: 'El camión pasa el día que dicen. Ya no me quedo sin agua para vender el fin de semana.', nombre: 'Tienda de barrio', ciudad: 'Lago Agrio' },
-    { texto: 'El hielo llega limpio y en cubos enteros. En los jugos y los cócteles se nota, y la funda con agarradera ayuda en la cocina.', nombre: 'Restaurante', ciudad: 'Shushufindi' },
-    { texto: 'Pido los garrafones por WhatsApp en un minuto y ya sé qué día me llegan.', nombre: 'Oficina', ciudad: 'Sacha' }
-  ];
-
   /* Analítica: GoatCounter (ligero, sin cookies). PENDIENTE: crear la cuenta en goatcounter.com
      y escribir aquí el código del sitio (la parte de "CODIGO.goatcounter.com"). Vacío = no se carga nada. */
   const ANALITICA = { goatcounter: '' };
@@ -534,25 +523,6 @@
   $$('[data-town]').forEach(b => b.addEventListener('click', () => pickTown(b.dataset.town)));
   $$('[data-town-dot]').forEach(g => g.addEventListener('click', () => pickTown(g.dataset.townDot)));
   pickTown('lago', true);
-
-  /* ── opiniones de clientes ── */
-  (function voices() {
-    const sec = $('[data-voices]');
-    let ok = TESTIMONIOS.filter(t => t && String(t.texto || '').trim() && String(t.nombre || '').trim());
-    // maqueta: mientras TESTIMONIOS esté vacío se muestran estos textos de muestra, rotulados como tales.
-    // Al cargar la primera opinión real, las muestras y el rótulo desaparecen solos.
-    const demo = !ok.length;
-    if (demo) ok = MUESTRAS;
-    if (!sec || !ok.length) return;
-    if (demo) $('[data-voices-demo]').hidden = false;
-    const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    $('[data-voices-list]').innerHTML = ok.map(t => `
-      <li><figure class="voice">
-        <blockquote><p>${esc(t.texto.trim())}</p></blockquote>
-        <figcaption><b>${esc(t.nombre.trim())}</b>${[t.negocio, t.ciudad].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('')}</figcaption>
-      </figure></li>`).join('');
-    sec.hidden = false;
-  })();
 
   /* ── pie: la semana completa, compacta ── */
   $('[data-week]').innerHTML = SEMANA.map(d => `

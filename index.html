@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Unbounded:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="preload" as="image" href="assets/img/productos/agua-625-hero-200.webp" imagesrcset="assets/img/productos/agua-625-hero-200.webp 200w, assets/img/productos/agua-625-hero-300.webp 300w, assets/img/productos/agua-625-hero-400.webp 400w" imagesizes="(max-width: 820px) 84px, 200px" type="image/webp" fetchpriority="high">
-  <link rel="stylesheet" href="css/styles.css?v=38">
+  <link rel="stylesheet" href="css/styles.css?v=39">
   <!-- Datos para buscadores. Los días de reparto repiten el cronograma RUTAS de js/main.js:
        si cambias una ruta allá, cámbiala también aquí. Lo mismo con los precios (NEGOCIO.precios).
        PENDIENTE: añadir "streetAddress" (dirección exacta), "openingHoursSpecification" (horario),
@@ -143,7 +143,7 @@
             <span class="line"><span>Premium</span></span>
             <span class="line hero__slogan"><span>El placer de refrescarte.</span></span>
           </h1>
-          <p class="hero__lede"><b>Planta purificadora en Lago Agrio.</b> Producimos agua y hielo purificados en siete etapas y abastecemos cada semana a negocios y hogares de Sucumbíos y Orellana.</p>
+          <p class="hero__lede"><b>Calidad que compite a nivel nacional.</b> Desde nuestra planta en Nueva Loja purificamos, envasamos y distribuimos Agua Premium e Ice Fresh con un proceso de siete etapas y entregas puntuales cada semana.</p>
 
           <form class="quick" data-quick aria-label="Pedido rápido">
             <fieldset class="quick__products">
@@ -423,14 +423,17 @@
       </div>
     </section>
 
-    <!-- OPINIONES ─────────────────────────── -->
-    <!-- PENDIENTE: por ahora muestra textos de MUESTRA (MUESTRAS en js/main.js), con el rótulo "Textos de muestra".
-         Al agregar opiniones reales en TESTIMONIOS, las muestras y el rótulo desaparecen solos. -->
-    <section class="voices" id="opiniones" aria-labelledby="voices-title" data-voices hidden>
-      <div class="wrap">
-        <h2 id="voices-title">Lo que dicen quienes ya nos compran.</h2>
-        <p class="voices__demo" data-voices-demo hidden>Textos de muestra</p>
-        <ul class="voices__list" data-voices-list></ul>
+    <!-- DISTRIBUIDORES ─────────────────────── -->
+    <section class="dealer" id="distribuidores" aria-labelledby="dealer-title">
+      <div class="wrap dealer__grid">
+        <h2 id="dealer-title">¿Quieres ser distribuidor de Agua Premium?</h2>
+        <div class="dealer__copy">
+          <p>Lleva Agua Premium e Ice Fresh a tu ciudad o a tu zona con el respaldo de nuestra planta. Escríbenos y te contamos cómo trabajar con nosotros.</p>
+          <a class="btn btn--wa" href="https://wa.me/593988212277?text=Hola%2C%20quiero%20informaci%C3%B3n%20para%20ser%20distribuidor%20de%20Agua%20Premium%20e%20Ice%20Fresh.%20Mi%20ciudad%20es%3A%20" target="_blank" rel="noopener">
+            <svg aria-hidden="true"><use href="#i-wa"/></svg>
+            Quiero ser distribuidor
+          </a>
+        </div>
       </div>
     </section>
 
@@ -600,7 +603,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
-  <script src="js/water-field.js?v=38" defer></script>
-  <script src="js/main.js?v=38" defer></script>
+  <script src="js/water-field.js?v=39" defer></script>
+  <script src="js/main.js?v=39" defer></script>
 </body>
 </html>
