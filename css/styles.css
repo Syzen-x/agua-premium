@@ -326,6 +326,7 @@ html { scrollbar-color: var(--acero) var(--agua); }
 .dealer__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: clamp(2rem, 6vw, 6rem); align-items: end; }
 .dealer h2 { font-size: var(--fs-5); max-width: 16ch; }
 .dealer__copy p { max-width: 34rem; color: var(--texto-2); font-size: var(--fs-2); }
+.dealer__copy .dealer__motto { margin-top: 1rem; font-family: var(--display); font-weight: 400; font-size: var(--fs-2); line-height: 1.4; color: var(--tapa-ink); }
 .dealer__copy .btn { margin-top: 1.6rem; }
 @media (max-width: 820px) { .dealer__grid { grid-template-columns: 1fr; } }
 
